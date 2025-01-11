@@ -6,8 +6,10 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
+    "antd": "^5.23.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.0"
   },
@@ -47,6 +49,8 @@
     ]
   },
   "devDependencies": {
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11",
     "husky": "^9.1.7",
     "prettier": "^3.4.2",
     "pretty-quick": "^4.0.0"

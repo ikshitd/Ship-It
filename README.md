@@ -1,3 +1,12 @@
+## TODO
+
+- ### FrontEnd
+  - Update the HOME page.
+  - Update the LOGIN / REGISTER pages.
+- ### Backend
+  - Create and Add the backend server.
+  - Determine the database to be used.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
