@@ -1,61 +1,84 @@
-import '@ant-design/v5-patch-for-react-19';
 import { useState } from 'react';
-import { Input, Button } from 'antd';
 import { Link } from 'react-router-dom';
+import { ReactComponent as ArrowRightIcon } from '../../assets/svg/keyboardArrowRightIcon.svg';
+import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
 
-function Register() {
-  const [email, setEmail] = useState('');
-  const [userName, setUserName] = useState('');
-  const [password, setPassword] = useState('');
+export default function Register() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+  const { name, email, password } = formData;
+
+  const onChange = (e) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      [e.target.id]: e.target.value,
+    }));
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    // TODO: Register the user on the platform
+  };
 
   return (
-    <div
-      style={{
-        margin: '20px',
-      }}
-    >
-      <h1 style={{ margin: '8px' }}> Register </h1>
-      <Input
-        value={email}
-        type="email"
-        placeholder="xyz@abc.com"
-        onChange={(e) => {
-          setEmail(e.target.value);
-        }}
-        style={{ margin: '8px' }}
-      ></Input>
-      <Input
-        value={userName}
-        type="text"
-        placeholder="xyz"
-        onChange={(e) => {
-          setUserName(e.target.value);
-        }}
-        style={{ margin: '8px' }}
-      ></Input>
-      <Input
-        value={password}
-        type="password"
-        placeholder="****"
-        onChange={(e) => {
-          setPassword(e.target.value);
-        }}
-        style={{ margin: '8px' }}
-      ></Input>
-      <Button
-        className="btn btn-neutral btn-primary"
-        onClick={() => {
-          // TODO: Register the user onto the platform.
-        }}
-        type="primary"
-        style={{ margin: '8px' }}
-      >
-        submit{' '}
-      </Button>
-      <Link to="/">
-        <Button type="default"> Go back to Home </Button>
-      </Link>
+    <div className="authenticationPage">
+      <div className="pageContainer">
+        <header>
+          <p className="pageHeader">Create Your Account !</p>
+        </header>
+
+        <form onSubmit={onSubmit}>
+          <input
+            type="text"
+            className="nameInput"
+            placeholder="UserName"
+            id="name"
+            value={name}
+            onChange={onChange}
+          />
+          <input
+            type="email"
+            className="emailInput"
+            placeholder="Email"
+            id="email"
+            value={email}
+            onChange={onChange}
+          />
+
+          <div className="passwordInputDiv">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              className="passwordInput"
+              placeholder="Password"
+              id="password"
+              value={password}
+              onChange={onChange}
+            />
+
+            <img
+              src={visibilityIcon}
+              alt="show password"
+              className="showPassword"
+              onClick={() => setShowPassword((prevState) => !prevState)}
+            />
+          </div>
+
+          <div className="signUpBar">
+            <p className="signUpText">Sign Up</p>
+            <button className="signUpButton">
+              <ArrowRightIcon fill="#ffffff" width="34px" height="34px" />
+            </button>
+          </div>
+        </form>
+
+        <Link to="/login" className="registerLink">
+          Log In Instead
+        </Link>
+      </div>
     </div>
   );
 }
-export default Register;

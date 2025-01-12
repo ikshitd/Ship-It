@@ -6,11 +6,16 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
+    "add": "^2.0.6",
     "antd": "^5.23.0",
+    "card": "^2.5.4",
     "react": "^19.0.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
+    "react-toastify": "^11.0.2",
+    "shadcn": "^2.1.8",
     "web-vitals": "^2.1.0"
   },
   "scripts": {
@@ -51,8 +56,12 @@
   "devDependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
+    "autoprefixer": "^10.4.20",
+    "daisyui": "^4.12.23",
     "husky": "^9.1.7",
+    "postcss": "^8.4.49",
     "prettier": "^3.4.2",
-    "pretty-quick": "^4.0.0"
+    "pretty-quick": "^4.0.0",
+    "tailwindcss": "^3.4.17"
   }
 }
