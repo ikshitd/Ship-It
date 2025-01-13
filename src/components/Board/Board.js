@@ -6,41 +6,38 @@ export default function Board() {
   const [tasks, setTasks] = useState({
     NOT_STARTED: [
       {
-        id: 'task-1',
-        heading: 'Advance Payments',
-        assigneeId: 'user_id',
-        startDate: '912102',
-        dueDate: '812981',
+        id: 1,
+        heading: '[Advance Payment]: Implementing UpdatePaymentConfiguraiton API',
+        assigneeId: 'Ikshit',
+        startDate: new Date('2021-09-01'),
+        dueDate: new Date('2021-09-10'),
         description: 'Something about the task here !!',
         priority: 'Low',
         status: 'At-Risk',
-        tags: [],
       },
       {
-        id: 'task-2',
+        id: 2,
         heading: 'Another Payments',
-        assigneeId: 'user_id',
-        startDate: '912102',
-        dueDate: '812981',
+        assigneeId: 'Some Radom User',
+        startDate: new Date(),
+        dueDate: new Date(),
         description: 'Something about the task here !!',
-        priority: 'Low',
+        priority: ' Low',
         status: 'At-Risk',
-        tags: [],
       },
     ],
     IN_PROGRESS: [],
     BLOCKED: [],
     DONE: [
       {
-        id: 'task-3',
+        id: 3,
         heading: 'Advance Payments',
         assigneeId: 'user_id',
-        startDate: '912102',
-        dueDate: '812981',
+        startDate: Date(),
+        dueDate: Date(),
         description: 'Something about the task here !!',
         priority: 'Low',
         status: 'At-Risk',
-        tags: [],
       },
     ],
   });
@@ -76,8 +73,8 @@ export default function Board() {
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps} className="section-container">
                 <div className="task-details">
-                  <div className="section-heading">
-                    <h3> {columnId.replace('_', ' ')} </h3>
+                  <div className="section-header">
+                    <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
                   </div>
                   {tasks[columnId].map((task, index) => (
                     <Draggable key={task.id} draggableId={task.id} index={index}>

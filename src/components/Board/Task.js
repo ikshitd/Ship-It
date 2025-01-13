@@ -1,15 +1,68 @@
+import { Tag } from 'antd';
+
 export default function Task({ task }) {
+  const beginDate = new Date(task.startDate);
+  const startDate = beginDate.getDate();
+  const startMonth = beginDate.toLocaleString('default', { month: 'short' });
+  const dueDate = new Date(task.dueDate);
+  const endDate = dueDate.getDate();
+  const endMonth = dueDate.toLocaleString('default', { month: 'short' });
+
   return (
-    <div className="task-card">
+    <div
+      onClick={() => {
+        console.log(`The task with id = ${task.id} is being clicked`);
+      }}
+      className="task-card"
+    >
       <div className="task-heading">
-        <strong>{task.heading}</strong>
+        <strong> {task.heading} </strong>
       </div>
       <div className="task-details">
-        <div>Assignee: {task.assigneeId}</div>
-        <div>Start Date: {task.startDate}</div>
-        <div>Due Date: {task.dueDate}</div>
-        <div>Description: {task.description}</div>
-        <div className="task-tags">Tags: {task.tags.length > 0 ? task.tags.join(', ') : 'No Tags'}</div>
+        {task.assigneeId != null ? (
+          <div style={{ fontSize: '17px', marginTop: '10  px', marginBottom: '10px' }}>
+            {' '}
+            Assignee: {task.assigneeId}{' '}
+          </div>
+        ) : null}
+        <div>
+          {task.startDate != null && task.dueDate != null ? (
+            <div style={{ fontSize: '17px', marginTop: '10px', marginBottom: '10px' }}>
+              {startDate} {startMonth}- {endDate} {endMonth}{' '}
+            </div>
+          ) : null}
+        </div>
+        {task.priority != null ? (
+          <Tag
+            style={{
+              fontSize: '17px',
+              justifyContent: 'center',
+              textAlign: 'center',
+              height: '30px',
+              width: '80px',
+              marginTop: '15px',
+            }}
+            color="blue"
+          >
+            <div style={{ marginTop: '3px' }}>{task.priority}</div>
+          </Tag>
+        ) : null}
+        {task.status != null ? (
+          <Tag
+            style={{
+              fontSize: '17px',
+              justifyContent: 'center',
+              textAlign: 'center',
+              height: '30px',
+              width: '80px',
+              marginTop: '10px',
+              marginBottom: '10px',
+            }}
+            color="red"
+          >
+            <div style={{ marginTop: '3px' }}>{task.status}</div>
+          </Tag>
+        ) : null}
       </div>
     </div>
   );
