@@ -850,16 +850,19 @@ button {
 /* Board Styling */
 .board-container {
   display: flex;
-  justify-content: space-around;
-  margin: 20px;
+  /* margin: 50px; */
+  gap: 1rem;
 }
 
 .section-container {
   width: 25%;
   padding: 10px;
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: 2px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-style: solid;
+  border-width: 0.5px;
+  border-collapse: collapse;
 }
 
 h3 {
@@ -881,7 +884,7 @@ h3 {
 .board-container {
   display: flex;
   padding: 20px;
-  height: 100vh;
+  height: 100%;
   border: 1px solid #ccc;
 }
 
@@ -925,4 +928,15 @@ h3 {
   font-style: italic;
   color: #888;
   margin-top: 10px;
+}
+
+.section-heading {
+  background-color: rgba(0, 0, 0, 0.11);
+  padding: 0px;
+  margin-top: -10px;
+  margin-left: -10px;
+  margin-right: -10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
