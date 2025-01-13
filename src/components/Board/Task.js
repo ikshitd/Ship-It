@@ -1,6 +1,8 @@
-import { Tag } from 'antd';
+import { useState } from 'react';
+import { Tag, Drawer, Button } from 'antd';
 
 export default function Task({ task }) {
+  const [isDrawerVisible, setDrawerVisible] = useState(false);
   const beginDate = new Date(task.startDate);
   const startDate = beginDate.getDate();
   const startMonth = beginDate.toLocaleString('default', { month: 'short' });
@@ -8,10 +10,16 @@ export default function Task({ task }) {
   const endDate = dueDate.getDate();
   const endMonth = dueDate.toLocaleString('default', { month: 'short' });
 
+  const closeDrawer = () => {
+    console.log('closing the drawer');
+    setDrawerVisible(false);
+  };
+
   return (
     <div
       onClick={() => {
-        console.log(`The task with id = ${task.id} is being clicked`);
+        // console.log('do something here');
+        setDrawerVisible(true);
       }}
       className="task-card"
     >
@@ -63,6 +71,33 @@ export default function Task({ task }) {
             <div style={{ marginTop: '3px' }}>{task.status}</div>
           </Tag>
         ) : null}
+        <Drawer
+          value={isDrawerVisible}
+          title="Task Details"
+          placement="right"
+          onClose={closeDrawer}
+          visible={isDrawerVisible}
+          width="50%"
+        >
+          <p>
+            <strong>Description:</strong> {task.description || 'No description available.'}
+          </p>
+          <p>
+            <strong>Start Date:</strong> {startDate} {startMonth}
+          </p>
+          <p>
+            <strong>Due Date:</strong> {endDate} {endMonth}
+          </p>
+          <p>
+            <strong>Assignee:</strong> {task.assigneeId || 'Unassigned'}
+          </p>
+          <p>
+            <strong>Priority:</strong> {task.priority || 'Not specified'}
+          </p>
+          <p>
+            <strong>Status:</strong> {task.status || 'Not specified'}
+          </p>
+        </Drawer>
       </div>
     </div>
   );
