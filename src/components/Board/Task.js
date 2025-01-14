@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tag, Drawer, Button } from 'antd';
+import { Tag, Drawer } from 'antd';
 
 export default function Task({ task }) {
   const [isDrawerVisible, setDrawerVisible] = useState(false);
