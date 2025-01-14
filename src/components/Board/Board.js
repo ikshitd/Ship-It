@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Task from './Task';
+import { Button } from 'antd';
 
 export default function Board() {
   const [tasks, setTasks] = useState({
     NOT_STARTED: [
       {
-        id: 1,
+        id: 'task-1',
         heading: '[Advance Payment]: Implementing UpdatePaymentConfiguraiton API',
         assigneeId: 'Ikshit',
         startDate: new Date('2021-09-01'),
@@ -16,7 +17,7 @@ export default function Board() {
         status: 'At-Risk',
       },
       {
-        id: 2,
+        id: 'task-2',
         heading: 'Another Payments',
         assigneeId: 'Some Radom User',
         startDate: new Date(),
@@ -30,7 +31,7 @@ export default function Board() {
     BLOCKED: [],
     DONE: [
       {
-        id: 3,
+        id: 'task-3',
         heading: 'Advance Payments',
         assigneeId: 'user_id',
         startDate: Date(),
@@ -75,6 +76,9 @@ export default function Board() {
                 <div className="task-details">
                   <div className="section-header">
                     <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
+                    <Button style={{ fontSize: '17px' }} type="primary" size="medium">
+                      Add Task
+                    </Button>
                   </div>
                   {tasks[columnId].map((task, index) => (
                     <Draggable key={task.id} draggableId={task.id} index={index}>

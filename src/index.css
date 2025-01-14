@@ -851,18 +851,17 @@ button {
 .board-container {
   display: flex;
   /* margin: 50px; */
-  /* gap: 1rem; */
+  gap: 1rem;
 }
 
 .section-container {
   width: 25%;
   padding: 10px;
   background-color: #f9f9f9;
-  /* border-radius: 7px; */
+  border-radius: 7px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  border-style: solid;
-  border-width: 0.5px;
-  /* border-collapse: collapse; */
+  border-style: none;
+  border-collapse: collapse;
 }
 
 h3 {
@@ -932,19 +931,24 @@ h3 {
 }
 
 .section-header {
-  background-color: rgba(0, 0, 0, 0.11);
+  /* background-color: rgba(0, 0, 0, 0.11); */
   font-weight: 800;
   color: black;
-  padding: 0px;
   margin-top: -10px;
   margin-left: -10px;
   margin-right: -10px;
   display: flex;
-  justify-content: center;
+  text-align: left;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 26px;
+  flex-wrap: wrap;
 }
 
 .section-heading {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 800;
+  margin-left: 25px;
+  padding-bottom: 7px;
 }

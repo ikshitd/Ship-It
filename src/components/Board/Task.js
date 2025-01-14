@@ -42,7 +42,7 @@ export default function Task({ task }) {
               width: '80px',
               marginTop: '15px',
             }}
-            color="blue"
+            color={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'orange' : 'darkgreen'}
           >
             <div style={{ marginTop: '3px' }}>{task.priority}</div>
           </Tag>
