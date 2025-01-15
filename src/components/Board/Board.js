@@ -21,14 +21,20 @@ export default function Board({ board }) {
   }
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
+    <DragDropContext
+      onDragEnd={onDragEnd}
+      style={{
+        transitionDuration: '0.3s',
+        transitionTimingFunction: 'ease-out',
+      }}
+    >
       <div className="board-container">
         {Object.keys(tasks).map((columnId) => (
           <Droppable
             key={columnId}
             droppableId={columnId}
             isDropDisabled={false}
-            isCombineEnabled={true}
+            isCombineEnabled={false}
             ignoreContainerClipping={true}
           >
             {(provided) => (
