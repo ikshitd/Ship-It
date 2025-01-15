@@ -1,11 +1,8 @@
 ## TODO
 
-- ### FrontEnd
-  - Update the HOME page.
-  - Update the LOGIN / REGISTER pages.
 - ### Backend
   - Create and Add the backend server.
-  - Determine the database to be used.
+  - Determine the database to be used. - MOST LIKELY SQL + PRISMA
 
 # Getting Started with Create React App
 
