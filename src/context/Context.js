@@ -16,8 +16,8 @@ export function AppContextProvider({ children }) {
             startDate: new Date('2021-09-01'),
             dueDate: new Date('2021-10-10'),
             description: 'Something about the task here !!',
-            priority: 'Low',
-            status: 'At-Risk',
+            priority: 'Medium',
+            status: 'At Risk',
           },
           {
             id: 'task-2',
@@ -26,8 +26,8 @@ export function AppContextProvider({ children }) {
             startDate: new Date(),
             dueDate: new Date(),
             description: 'Something about the task here !!',
-            priority: ' Low',
-            status: 'At-Risk',
+            priority: 'High',
+            status: 'On Risk',
           },
         ],
         IN_PROGRESS: [],
@@ -41,7 +41,7 @@ export function AppContextProvider({ children }) {
             dueDate: Date(),
             description: 'Something about the task here !!',
             priority: 'Low',
-            status: 'At-Risk',
+            status: 'Off Risk',
           },
         ],
       },
@@ -137,6 +137,59 @@ export function AppContextProvider({ children }) {
     );
   }
 
+  function handleTaskHeadingUpdate(boardId, columnId, taskId, newHeading) {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              tasks: {
+                ...board.tasks,
+                [columnId]: board.tasks[columnId].map((task) =>
+                  task.id === taskId ? { ...task, heading: newHeading } : task
+                ),
+              },
+            }
+          : board
+      )
+    );
+  }
+
+  function handlePriorityChange(boardId, columnId, taskId, newPriority) {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              tasks: {
+                ...board.tasks,
+                [columnId]: board.tasks[columnId].map((task) =>
+                  task.id === taskId ? { ...task, priority: newPriority } : task
+                ),
+              },
+            }
+          : board
+      )
+    );
+  }
+
+  function handleStatusChange(boardId, columnId, taskId, newStatus) {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) =>
+        board.id === boardId
+          ? {
+              ...board,
+              tasks: {
+                ...board.tasks,
+                [columnId]: board.tasks[columnId].map((task) =>
+                  task.id === taskId ? { ...task, status: newStatus } : task
+                ),
+              },
+            }
+          : board
+      )
+    );
+  }
   const value = {
     boards,
     selectedBoardId,
@@ -145,6 +198,9 @@ export function AppContextProvider({ children }) {
     handleDateChange,
     handleDescriptionChange,
     updateBoard,
+    handleTaskHeadingUpdate,
+    handlePriorityChange,
+    handleStatusChange,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

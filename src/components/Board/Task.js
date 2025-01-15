@@ -1,22 +1,30 @@
 import { useState } from 'react';
-import { Tag, Drawer } from 'antd';
+import { Tag, Drawer, Input, Select } from 'antd';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useAppContext } from '../../context/Context';
 
-export default function Task({ boardId, columnId, taskId, task }) {
-  const { handleDateChange, handleDescriptionChange } = useAppContext();
+export default function Task({ board, columnId, taskId, task }) {
+  const {
+    handleDateChange,
+    handleDescriptionChange,
+    handleTaskHeadingUpdate,
+    handlePriorityChange,
+    handleStatusChange,
+  } = useAppContext();
+
   const [isDrawerVisible, setDrawerVisible] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newHeading, setNewHeading] = useState(task.heading);
+
+  const boardId = board.id;
   const beginDate = new Date(task.startDate);
   const startDate = beginDate.getDate();
   const startMonth = beginDate.toLocaleString('default', { month: 'short' });
   const dueDate = new Date(task.dueDate);
   const endDate = dueDate.getDate();
   const endMonth = dueDate.toLocaleString('default', { month: 'short' });
-
-  function closeDrawer() {
-    setDrawerVisible(false);
-  }
+  const { Option } = Select;
 
   return (
     <div
@@ -26,18 +34,18 @@ export default function Task({ boardId, columnId, taskId, task }) {
       className="task-card"
     >
       <div className="task-heading">
-        <strong> {task.heading} </strong>
+        <p style={{ fontSize: '16px' }}> {task.heading} </p>
       </div>
       <div className="task-details">
         {task.assigneeId != null ? (
-          <div style={{ fontSize: '17px', marginTop: '10  px', marginBottom: '10px' }}>
+          <div style={{ fontSize: '16px', marginTop: '10  px', marginBottom: '10px' }}>
             {' '}
             Assignee: {task.assigneeId}{' '}
           </div>
         ) : null}
         <div>
           {task.startDate != null && task.dueDate != null ? (
-            <div style={{ fontSize: '17px', marginTop: '10px', marginBottom: '10px' }}>
+            <div style={{ fontSize: '16px', marginTop: '10px', marginBottom: '10px' }}>
               {startDate} {startMonth}- {endDate} {endMonth}{' '}
             </div>
           ) : null}
@@ -45,14 +53,14 @@ export default function Task({ boardId, columnId, taskId, task }) {
         {task.priority != null ? (
           <Tag
             style={{
-              fontSize: '17px',
+              fontSize: '16px',
               justifyContent: 'center',
               textAlign: 'center',
               height: '30px',
               width: '80px',
               marginTop: '15px',
             }}
-            color={task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'orange' : 'darkgreen'}
+            color={task.priority === 'High' ? '#ed3e3e' : task.priority === 'Medium' ? '#fc7819' : '#03ad2b'}
           >
             <div style={{ marginTop: '3px' }}>{task.priority}</div>
           </Tag>
@@ -60,7 +68,7 @@ export default function Task({ boardId, columnId, taskId, task }) {
         {task.status != null ? (
           <Tag
             style={{
-              fontSize: '17px',
+              fontSize: '16px',
               justifyContent: 'center',
               textAlign: 'center',
               height: '30px',
@@ -68,7 +76,7 @@ export default function Task({ boardId, columnId, taskId, task }) {
               marginTop: '10px',
               marginBottom: '10px',
             }}
-            color="red"
+            color={task.status === 'On Track' ? '#18c4ab' : task.status === 'At Risk' ? '#f7b100' : '#171511'}
           >
             <div style={{ marginTop: '3px' }}>{task.status}</div>
           </Tag>
@@ -77,12 +85,34 @@ export default function Task({ boardId, columnId, taskId, task }) {
           value={isDrawerVisible}
           title={<h2 style={{ fontWeight: 'bold', margin: 0 }}>Task Details</h2>}
           placement="right"
-          onClose={closeDrawer}
+          onClose={() => {
+            setDrawerVisible(false);
+          }}
+          closable={false}
           open={isDrawerVisible}
           width="50%"
+          motion={{
+            motionAppear: true,
+          }}
         >
           <div style={{ padding: '16px', fontFamily: 'Monaco, sans-serif' }}>
-            <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>{task.heading}</h2>
+            <section style={{ marginBottom: '24px', textAlign: 'center' }}>
+              {isEditing ? (
+                <Input
+                  value={newHeading}
+                  onChange={(e) => {
+                    setNewHeading(e.target.value);
+                  }}
+                  onBlur={() => {
+                    handleTaskHeadingUpdate(boardId, columnId, taskId, newHeading);
+                    setIsEditing(false);
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <h3 onClick={() => setIsEditing(true)}>{task.heading}</h3>
+              )}
+            </section>
 
             <section style={{ marginBottom: '30px' }}>
               <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Dates</h3>
@@ -154,22 +184,37 @@ export default function Task({ boardId, columnId, taskId, task }) {
 
             <section style={{ marginBottom: '30px' }}>
               <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Details</h3>
-              <p style={{ margin: '0 0 12px 0', paddingLeft: '10px' }}>
-                <strong>Priority:</strong>{' '}
-                <span
-                  style={{
-                    color: task.priority === 'High' ? 'red' : task.priority === 'Medium' ? 'orange' : 'green',
-                  }}
-                >
-                  {task.priority || 'Not specified'}
-                </span>
-              </p>
-              <p style={{ margin: '0', paddingLeft: '10px' }}>
-                <strong>Status:</strong>{' '}
-                <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
-                  {task.status || 'Not specified'}
-                </span>
-              </p>
+              <strong> Priority: </strong>
+
+              <Select
+                value={task.priority}
+                onChange={(value) => handlePriorityChange(boardId, columnId, taskId, value)}
+                style={{
+                  width: '20%',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                }}
+                dropdownStyle={{ borderRadius: '2px' }}
+              >
+                <Option value="Low">Low</Option>
+                <Option value="Medium">Medium</Option>
+                <Option value="High">High</Option>
+              </Select>
+
+              <strong> Status: </strong>
+              <Select
+                value={task.status}
+                onChange={(value) => handleStatusChange(boardId, columnId, taskId, value)}
+                style={{
+                  width: '20%',
+                  borderRadius: '8px',
+                }}
+                dropdownStyle={{ borderRadius: '8px' }}
+              >
+                <Option value="At Risk">At Risk</Option>
+                <Option value="Off Risk">Off Risk</Option>
+                <Option value="On Track">On Track</Option>
+              </Select>
             </section>
 
             <section style={{ marginBottom: '30px' }}>
@@ -184,6 +229,7 @@ export default function Task({ boardId, columnId, taskId, task }) {
                   height: '120px',
                   padding: '12px',
                   fontSize: '16px',
+                  fontFamily: 'Monaco',
                   borderRadius: '8px',
                   border: '1px solid #ccc',
                   outline: 'none',

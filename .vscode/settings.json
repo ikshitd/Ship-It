@@ -3,6 +3,15 @@
     "iostream": "cpp",
     "chrono": "cpp",
     "random": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "__bit_reference": "cpp",
+    "__hash_table": "cpp",
+    "__split_buffer": "cpp",
+    "array": "cpp",
+    "deque": "cpp",
+    "initializer_list": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "unordered_map": "cpp"
   }
 }

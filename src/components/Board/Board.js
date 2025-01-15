@@ -55,7 +55,7 @@ export default function Board({ board }) {
                           {...provided.dragHandleProps}
                         >
                           <Task
-                            boardId={board.id}
+                            board={board}
                             columnId={columnId}
                             taskId={task.id}
                             handleDescriptionChange={handleDescriptionChange}

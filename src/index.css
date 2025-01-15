@@ -897,7 +897,6 @@ h3 {
   border-right: none;
 }
 
-/* Task Styling */
 .task-card {
   background-color: #fff;
   border-radius: 8px;
@@ -915,12 +914,12 @@ h3 {
   font-size: 17px;
   font-weight: bold;
   color: black;
-  margin-bottom: 15px;
   position: relative;
-  word-wrap: break-word; /* Ensures text wraps to the next line */
-  overflow: hidden; /* Hides overflow if the text is too long */
-  text-overflow: ellipsis; /* Adds ellipsis for overflowing text */
-  white-space: nowrap; /* Prevents wrapping, but combined with overflow/ellipsis for truncation */
+  word-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: '100px';
 }
 
 .task-details {
