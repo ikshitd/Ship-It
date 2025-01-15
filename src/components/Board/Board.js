@@ -43,6 +43,15 @@ export default function Board() {
     ],
   });
 
+  const handleDescriptionChange = (columnId, taskId, newDescription) => {
+    setTasks((prevTasks) => ({
+      ...prevTasks,
+      [columnId]: prevTasks[columnId].map((task) =>
+        task.id === taskId ? { ...task, description: newDescription } : task
+      ),
+    }));
+  };
+
   const onDragEnd = (result) => {
     // TODO: Update the logic for moving the tasks here and there.
     const { source, destination } = result;
@@ -88,7 +97,13 @@ export default function Board() {
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
                         >
-                          <Task key={task.id} task={task}></Task>
+                          <Task
+                            columnId={columnId}
+                            taskId={task.id}
+                            handleDescriptionChange={handleDescriptionChange}
+                            key={task.id}
+                            task={task}
+                          ></Task>
                         </div>
                       )}
                     </Draggable>
