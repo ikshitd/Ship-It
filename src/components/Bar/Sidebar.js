@@ -80,8 +80,8 @@ export default function Sidebar() {
           )}
         </div>
       </Sider>
-      <Layout style={{ padding: '24px' }}>
-        <Content style={{ background: '#fff', padding: '16px', borderRadius: '8px' }}>
+      <Layout>
+        <Content style={{ background: '#fff', borderRadius: '8px' }}>
           {selectedBoard ? (
             <Board board={selectedBoard} />
           ) : (

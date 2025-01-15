@@ -24,7 +24,7 @@ export default function Board({ board }) {
     <DragDropContext
       onDragEnd={onDragEnd}
       style={{
-        transitionDuration: '0.02s',
+        transitionDuration: '0s',
         transitionTimingFunction: 'cubic-bezier(0.25, 0.8, 0.25, 1)',
         willChange: 'transform',
       }}
