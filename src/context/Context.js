@@ -27,7 +27,7 @@ export function AppContextProvider({ children }) {
             dueDate: new Date(),
             description: 'Something about the task here !!',
             priority: 'High',
-            status: 'On Risk',
+            status: 'On Track',
           },
         ],
         IN_PROGRESS: [],
