@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Tag, Drawer } from 'antd';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-export default function Task({ columnId, taskId, task, handleDescriptionChange }) {
+export default function Task({ columnId, taskId, task, handleDescriptionChange, handleDateChange }) {
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const beginDate = new Date(task.startDate);
   const startDate = beginDate.getDate();
@@ -11,14 +13,12 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange }
   const endMonth = dueDate.toLocaleString('default', { month: 'short' });
 
   const closeDrawer = () => {
-    console.log('closing the drawer');
     setDrawerVisible(false);
   };
 
   return (
     <div
       onClick={() => {
-        // console.log('do something here');
         setDrawerVisible(true);
       }}
       className="task-card"
@@ -76,30 +76,83 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange }
           title={<h2 style={{ fontWeight: 'bold', margin: 0 }}>Task Details</h2>}
           placement="right"
           onClose={closeDrawer}
-          visible={isDrawerVisible}
-          width="40%"
+          open={isDrawerVisible}
+          width="50%"
         >
-          <div style={{ padding: '16px', fontFamily: 'Arial, sans-serif' }}>
-            <section style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '8px', color: '#4a4a4a' }}>Dates</h3>
-              <p>
-                <strong>Start Date:</strong> {startDate} {startMonth}
-              </p>
-              <p>
-                <strong>Due Date:</strong> {endDate} {endMonth}
-              </p>
+          <div style={{ padding: '16px', fontFamily: 'Monaco, sans-serif' }}>
+            <h2 style={{ marginBottom: '24px', textAlign: 'center' }}>{task.heading}</h2>
+
+            <section style={{ marginBottom: '30px' }}>
+              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Dates</h3>
+              <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
+                <label
+                  htmlFor="startDate"
+                  style={{
+                    display: 'inline-block',
+                    fontWeight: 'bold',
+                    marginRight: '10px',
+                    width: '100px',
+                    textAlign: 'right',
+                  }}
+                >
+                  Start Date:
+                </label>
+                <DatePicker
+                  id="startDate"
+                  selected={beginDate}
+                  value={beginDate}
+                  onChange={(date) => handleDateChange(columnId, task.id, 'startDate', date)}
+                  style={{
+                    width: '100%',
+                    borderRadius: '8px',
+                    padding: '8px',
+                  }}
+                  dateFormat="yyyy-MM-dd"
+                  showYearDropdown
+                  scrollableMonthYearDropdown
+                />
+              </div>
+              <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
+                <label
+                  htmlFor="endDate"
+                  style={{
+                    display: 'inline-block',
+                    fontWeight: 'bold',
+                    marginRight: '10px',
+                    width: '100px',
+                    textAlign: 'right',
+                  }}
+                >
+                  End Date:
+                </label>
+                <DatePicker
+                  id="endDate"
+                  selected={dueDate}
+                  value={dueDate}
+                  onChange={(date, dateString) => {
+                    console.log('Selected Date:', date, 'Formatted:', dateString);
+                    handleDateChange(columnId, task.id, 'dueDate', date);
+                  }}
+                  style={{
+                    width: '100%',
+                    borderRadius: '8px',
+                    padding: '8px',
+                  }}
+                  dateFormat="yyyy-MM-dd"
+                />
+              </div>
             </section>
 
-            <section style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '8px', color: '#4a4a4a' }}>Assignee</h3>
-              <p>
+            <section style={{ marginBottom: '30px' }}>
+              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Assignee</h3>
+              <p style={{ margin: '0 0 16px 0', paddingLeft: '10px' }}>
                 <strong>Assigned To:</strong> {task.assigneeId || 'Unassigned'}
               </p>
             </section>
 
-            <section style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '8px', color: '#4a4a4a' }}>Details</h3>
-              <p>
+            <section style={{ marginBottom: '30px' }}>
+              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Details</h3>
+              <p style={{ margin: '0 0 12px 0', paddingLeft: '10px' }}>
                 <strong>Priority:</strong>{' '}
                 <span
                   style={{
@@ -109,7 +162,7 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange }
                   {task.priority || 'Not specified'}
                 </span>
               </p>
-              <p>
+              <p style={{ margin: '0', paddingLeft: '10px' }}>
                 <strong>Status:</strong>{' '}
                 <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
                   {task.status || 'Not specified'}
@@ -117,8 +170,8 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange }
               </p>
             </section>
 
-            <section style={{ marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '8px', color: '#4a4a4a' }}>Task Description</h3>
+            <section style={{ marginBottom: '30px' }}>
+              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Description</h3>
               <textarea
                 id="taskDescription"
                 value={task.description || ''}
@@ -126,12 +179,16 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange }
                 placeholder="Enter task description..."
                 style={{
                   width: '100%',
-                  height: '100px',
-                  padding: '8px',
-                  fontSize: '14px',
-                  borderRadius: '4px',
+                  height: '120px',
+                  padding: '12px',
+                  fontSize: '16px',
+                  borderRadius: '8px',
                   border: '1px solid #ccc',
-                  resize: 'vertical',
+                  outline: 'none',
+                  backgroundColor: '#f9f9f9',
+                  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+                  transition: 'border-color 0.3s, box-shadow 0.3s',
+                  resize: 'none',
                 }}
               />
             </section>

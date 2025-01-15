@@ -3,15 +3,15 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Task from './Task';
 import { Button } from 'antd';
 
-export default function Board() {
+export default function Board({ board }) {
   const [tasks, setTasks] = useState({
     NOT_STARTED: [
       {
         id: 'task-1',
-        heading: '[Advance Payment]: Implementing UpdatePaymentConfiguraiton API',
+        heading: '[Advance Payment]: Implementing UpdatePaymentConfiguration API',
         assigneeId: 'Ikshit',
         startDate: new Date('2021-09-01'),
-        dueDate: new Date('2021-09-10'),
+        dueDate: new Date('2021-10-10'),
         description: 'Something about the task here !!',
         priority: 'Low',
         status: 'At-Risk',
@@ -48,6 +48,15 @@ export default function Board() {
       ...prevTasks,
       [columnId]: prevTasks[columnId].map((task) =>
         task.id === taskId ? { ...task, description: newDescription } : task
+      ),
+    }));
+  };
+
+  const handleDateChange = (columnId, taskId, field, date) => {
+    setTasks((prevTasks) => ({
+      ...prevTasks,
+      [columnId]: prevTasks[columnId].map((task) =>
+        task.id === taskId ? { ...task, [field]: date ? date.toISOString() : null } : task
       ),
     }));
   };
@@ -101,6 +110,7 @@ export default function Board() {
                             columnId={columnId}
                             taskId={task.id}
                             handleDescriptionChange={handleDescriptionChange}
+                            handleDateChange={handleDateChange}
                             key={task.id}
                             task={task}
                           ></Task>
