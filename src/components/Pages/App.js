@@ -1,9 +1,9 @@
-import Board from '../Board/Board';
+import React from 'react';
 import { useAppContext } from '../../context/Context';
+import Board from '../Board/Board';
 
 export default function App() {
-  const { boards, handleBoardClick } = useAppContext();
-
+  const { boards, handleBoardClick, selectedBoardId } = useAppContext();
   return (
     <div>
       <h1>Task Boards</h1>
