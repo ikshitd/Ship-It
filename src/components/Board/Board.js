@@ -4,24 +4,39 @@ import { Button } from 'antd';
 import { useAppContext } from '../../context/Context';
 
 export default function Board({ board }) {
-  const { handleDescriptionChange, handleDateChange } = useAppContext();
+  const { handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
   const tasks = board.tasks;
 
   function onDragEnd(result) {
-    // TODO: Update the logic for moving the tasks here and there.
+    const { source, destination } = result;
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return;
+    }
+    const sourceColumn = tasks[source.droppableId];
+    const [movedTask] = sourceColumn.splice(source.index, 1);
+    const destinationColumn = tasks[destination.droppableId];
+    destinationColumn.splice(destination.index, 0, movedTask);
+    updateBoard(board, source, destination, sourceColumn, destinationColumn);
   }
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="board-container">
         {Object.keys(tasks).map((columnId) => (
-          <Droppable key={columnId} droppableId={columnId}>
+          <Droppable
+            key={columnId}
+            droppableId={columnId}
+            isDropDisabled={false}
+            isCombineEnabled={true}
+            ignoreContainerClipping={true}
+          >
             {(provided) => (
               <div ref={provided.innerRef} {...provided.droppableProps} className="section-container">
                 <div className="task-details">
                   <div className="section-header">
                     <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
-                    <Button style={{ fontSize: '17px' }} type="primary" size="medium">
+                    <Button style={{ fontSize: '13px' }} type="secondary" size="small">
                       Add Task
                     </Button>
                   </div>

@@ -120,6 +120,23 @@ export function AppContextProvider({ children }) {
     setSelectedBoardId(newBoard.id);
   }
 
+  function updateBoard(board, source, destination, sourceColumn, destinationColumn) {
+    setBoards((prevBoards) =>
+      prevBoards.map((boardItem) =>
+        boardItem.id === board.id
+          ? {
+              ...boardItem,
+              tasks: {
+                ...boardItem.tasks,
+                [source.droppableId]: sourceColumn,
+                [destination.droppableId]: destinationColumn,
+              },
+            }
+          : boardItem
+      )
+    );
+  }
+
   const value = {
     boards,
     selectedBoardId,
@@ -127,6 +144,7 @@ export function AppContextProvider({ children }) {
     handleBoardClick,
     handleDateChange,
     handleDescriptionChange,
+    updateBoard,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
