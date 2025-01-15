@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Tag, Drawer } from 'antd';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { useAppContext } from '../../context/Context';
 
-export default function Task({ columnId, taskId, task, handleDescriptionChange, handleDateChange }) {
+export default function Task({ boardId, columnId, taskId, task }) {
+  const { handleDateChange, handleDescriptionChange } = useAppContext();
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const beginDate = new Date(task.startDate);
   const startDate = beginDate.getDate();
@@ -12,9 +14,9 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange, 
   const endDate = dueDate.getDate();
   const endMonth = dueDate.toLocaleString('default', { month: 'short' });
 
-  const closeDrawer = () => {
+  function closeDrawer() {
     setDrawerVisible(false);
-  };
+  }
 
   return (
     <div
@@ -101,7 +103,7 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange, 
                   id="startDate"
                   selected={beginDate}
                   value={beginDate}
-                  onChange={(date) => handleDateChange(columnId, task.id, 'startDate', date)}
+                  onChange={(date) => handleDateChange(boardId, columnId, task.id, 'startDate', date)}
                   style={{
                     width: '100%',
                     borderRadius: '8px',
@@ -131,7 +133,7 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange, 
                   value={dueDate}
                   onChange={(date, dateString) => {
                     console.log('Selected Date:', date, 'Formatted:', dateString);
-                    handleDateChange(columnId, task.id, 'dueDate', date);
+                    handleDateChange(boardId, columnId, task.id, 'dueDate', date);
                   }}
                   style={{
                     width: '100%',
@@ -175,7 +177,7 @@ export default function Task({ columnId, taskId, task, handleDescriptionChange, 
               <textarea
                 id="taskDescription"
                 value={task.description || ''}
-                onChange={(e) => handleDescriptionChange(columnId, taskId, e.target.value)}
+                onChange={(e) => handleDescriptionChange(boardId, columnId, taskId, e.target.value)}
                 placeholder="Enter task description..."
                 style={{
                   width: '100%',
