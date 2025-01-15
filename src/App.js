@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './components/Pages/Login';
 import Register from './components/Pages/Register';
-import Home from './components/Pages/App.js';
+import Home from './components/Pages/Home.js';
 import Navbar from './components/Bar/Navbar.js';
 import { AppContextProvider } from '../src/context/Context';
 
