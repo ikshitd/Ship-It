@@ -8,12 +8,18 @@ export default function Sidebar() {
   const { Sider, Content } = Layout;
   const [currentBoardId, setCurrentBoardId] = useState(boards[0]?.id);
 
-  const handleMenuClick = (boardId) => {
-    setCurrentBoardId(boardId);
+  const handleMenuClick = ({ key }) => {
+    setCurrentBoardId(parseInt(key, 10));
   };
 
   const selectedBoard = boards.find((board) => board.id === currentBoardId);
   const users = [];
+
+  const menuItems = boards.map((board) => ({
+    key: board.id.toString(),
+    label: board.name,
+    onClick: () => handleMenuClick({ key: board.id.toString() }),
+  }));
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -30,7 +36,8 @@ export default function Sidebar() {
           <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}> Boards </h3>
           <Menu
             mode="inline"
-            defaultSelectedKeys={[boards[0]?.id]}
+            defaultSelectedKeys={[boards[0]?.id.toString()]}
+            items={menuItems} // Use the `items` prop
             style={{
               border: 0,
               fontSize: '16px',
@@ -38,21 +45,7 @@ export default function Sidebar() {
               margin: '0px',
               borderRadius: '10px',
             }}
-          >
-            {boards.map((board) => (
-              <Menu.Item
-                key={board.id}
-                onClick={() => handleMenuClick(board.id)}
-                style={{
-                  fontSize: '16px',
-                  fontWeight: '500',
-                  padding: '10px 24px',
-                }}
-              >
-                {board.name}
-              </Menu.Item>
-            ))}
-          </Menu>
+          />
         </div>
         <Divider style={{ margin: '12px 0' }} />
         <div style={{ padding: '16px' }}>

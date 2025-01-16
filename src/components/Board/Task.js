@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Tag, Drawer, Input, Select } from 'antd';
-import DatePicker from 'react-datepicker';
+import { Tag, Drawer, Input, Select, DatePicker } from 'antd';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useAppContext } from '../../context/Context.js';
+import moment from 'moment';
 
 export default function Task({ board, columnId, taskId, task }) {
   const {
@@ -113,7 +113,6 @@ export default function Task({ board, columnId, taskId, task }) {
                 <h3 onClick={() => setIsEditing(true)}>{task.heading}</h3>
               )}
             </section>
-
             <section style={{ marginBottom: '30px' }}>
               <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Dates</h3>
               <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
@@ -131,17 +130,9 @@ export default function Task({ board, columnId, taskId, task }) {
                 </label>
                 <DatePicker
                   id="startDate"
-                  selected={beginDate}
-                  value={beginDate}
+                  value={moment(beginDate)}
                   onChange={(date) => handleDateChange(boardId, columnId, task.id, 'startDate', date)}
-                  style={{
-                    width: '100%',
-                    borderRadius: '8px',
-                    padding: '8px',
-                  }}
-                  dateFormat="yyyy-MM-dd"
-                  showYearDropdown
-                  scrollableMonthYearDropdown
+                  format="YYYY-MM-DD"
                 />
               </div>
               <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
@@ -159,29 +150,18 @@ export default function Task({ board, columnId, taskId, task }) {
                 </label>
                 <DatePicker
                   id="endDate"
-                  selected={dueDate}
-                  value={dueDate}
-                  onChange={(date, dateString) => {
-                    console.log('Selected Date:', date, 'Formatted:', dateString);
-                    handleDateChange(boardId, columnId, task.id, 'dueDate', date);
-                  }}
-                  style={{
-                    width: '100%',
-                    borderRadius: '8px',
-                    padding: '8px',
-                  }}
-                  dateFormat="yyyy-MM-dd"
+                  value={moment(dueDate)}
+                  onChange={(date) => handleDateChange(boardId, columnId, task.id, 'dueDate', date)}
+                  format="YYYY-MM-DD"
                 />
               </div>
-            </section>
-
+            </section>{' '}
             <section style={{ marginBottom: '30px' }}>
               <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Assignee</h3>
               <p style={{ margin: '0 0 16px 0', paddingLeft: '10px' }}>
                 <strong>Assigned To:</strong> {task.assigneeId || 'Unassigned'}
               </p>
             </section>
-
             <section style={{ marginBottom: '30px' }}>
               <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Details</h3>
               <strong> Priority: </strong>
@@ -216,7 +196,6 @@ export default function Task({ board, columnId, taskId, task }) {
                 <Option value="On Track">On Track</Option>
               </Select>
             </section>
-
             <section style={{ marginBottom: '30px' }}>
               <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Description</h3>
               <textarea
