@@ -110,15 +110,15 @@ export function AppContextProvider({ children }) {
     setSelectedBoardId(boardId);
   }
 
-  function addBoard(name) {
-    const newBoard = {
-      id: boards.length + 1,
-      name,
-      tasks: { NOT_STARTED: [], IN_PROGRESS: [], BLOCKED: [], DONE: [] },
-    };
-    setBoards([...boards, newBoard]);
-    setSelectedBoardId(newBoard.id);
-  }
+  // function addBoard(name) {
+  //   const newBoard = {
+  //     id: boards.length + 1,
+  //     name,
+  //     tasks: { NOT_STARTED: [], IN_PROGRESS: [], BLOCKED: [], DONE: [] },
+  //   };
+  //   setBoards([...boards, newBoard]);
+  //   setSelectedBoardId(newBoard.id);
+  // }
 
   function updateBoard(board, source, destination, sourceColumn, destinationColumn) {
     setBoards((prevBoards) =>

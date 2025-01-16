@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ReactComponent as ArrowRightIcon } from '../../assets/svg/keyboardArrowRightIcon.svg';
 import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
+import axios from 'axios';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,6 +11,8 @@ export default function Login() {
     password: '',
   });
   const { email, password } = formData;
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   function onChange(e) {
     setFormData((prevState) => ({
@@ -20,7 +23,17 @@ export default function Login() {
 
   async function onSubmit(e) {
     e.preventDefault();
-    // TODO: Set Item to LocalStorage
+    try {
+      const response = await axios.post('http://localhost:3001/login', {
+        email: email,
+        password: password,
+      });
+      if (response.status === 200) {
+        navigate('/', { replace: true });
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    }
   }
 
   return (
@@ -64,6 +77,7 @@ export default function Login() {
               <ArrowRightIcon fill="#ffffff" width="34px" height="34px" />
             </button>
           </div>
+          {error && <p className="errorText">{error}</p>}
         </form>
 
         <Link to="/register" className="registerLink">
