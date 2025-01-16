@@ -2,10 +2,14 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Task from './Task.js';
 import { Button } from 'antd';
 import { useAppContext } from '../../context/Context.js';
-
 export default function Board({ board }) {
   const { handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
-  const tasks = board.tasks;
+  const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
+
+  const tasks = {
+    ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
+    ...board.tasks,
+  };
 
   function onDragEnd(result) {
     const { source, destination } = result;
@@ -20,6 +24,11 @@ export default function Board({ board }) {
     updateBoard(board, source, destination, sourceColumn, destinationColumn);
   }
 
+  function addTask(columnId) {
+    console.log(`Adding the task: ${columnId}`);
+    // TODO: To add the logic for addition of the tasks.
+  }
+
   return (
     <DragDropContext
       onDragEnd={onDragEnd}
@@ -30,7 +39,7 @@ export default function Board({ board }) {
       }}
     >
       <div className="board-container">
-        {Object.keys(tasks).map((columnId) => (
+        {DEFAULT_COLUMNS.map((columnId) => (
           <Droppable
             key={columnId}
             droppableId={columnId}
@@ -43,7 +52,12 @@ export default function Board({ board }) {
                 <div className="task-details">
                   <div className="section-header">
                     <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
-                    <Button style={{ fontSize: '13px' }} type="secondary" size="small">
+                    <Button
+                      style={{ fontSize: '13px' }}
+                      type="secondary"
+                      size="small"
+                      onClick={() => addTask(columnId)}
+                    >
                       Add Task
                     </Button>
                   </div>

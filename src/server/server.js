@@ -29,7 +29,7 @@ function authenticate(req, res, next) {
   }
   try {
     const decoded = jwt.verify(token, SECRET);
-    console.log('decoded: ', decoded);
+    req.userId = decoded.id;
     next();
   } catch (err) {
     return res.status(403).json({ error: 'Invalid or expired token' });
@@ -47,7 +47,7 @@ app.get('/tasks', authenticate, async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { name, email, password } = req.body;
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
     return res.status(400).json({ error: 'User already exists' });
@@ -55,7 +55,7 @@ app.post('/register', async (req, res) => {
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   const user = await prisma.user.create({
     data: {
-      username,
+      name,
       email,
       password: hashedPassword,
     },
@@ -79,5 +79,35 @@ app.post('/login', async (req, res) => {
     res.status(200).json({ message: 'Login successful', token });
   } catch (err) {
     res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+app.get('/boards', authenticate, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const boards = await prisma.board.findMany({ where: { userId: userId }, include: { tasks: true } });
+    res.json(boards);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: `Error fetching boards for userId: ${req.userId}` });
+  }
+});
+
+app.post('/add-board', authenticate, async (req, res) => {
+  const { userId, boardName } = req.body;
+  if (!userId || !boardName) {
+    return res.status(400).json({ error: 'userId and boardName, both are required' });
+  }
+  try {
+    const newBoard = await prisma.board.create({
+      data: {
+        name: boardName,
+        userId: userId,
+        tasks: {},
+      },
+    });
+    res.status(200).json(newBoard);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create board' });
   }
 });

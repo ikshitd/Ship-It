@@ -7,17 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Task {
-  id          Int      @id @default(autoincrement()) // Auto-incrementing primary key
-  title       String   // Non-nullable field
-  description String?  // Nullable field
-  createdAt   DateTime @default(now()) // Default to current timestamp
-  @@map("task") // This makes sure the model maps to the 'task' table in lowercase
+model User {
+  id        Int     @id @default(autoincrement())
+  name      String
+  email     String  @unique
+  password  String
+  boards    Board[] 
 }
 
-model User {
-  id       Int      @id @default(autoincrement())
-  username String @default("TestUser")
-  email    String   @unique
-  password String
+model Board {
+  id        Int     @id @default(autoincrement())
+  name      String
+  userId    Int     
+  user      User    @relation(fields: [userId], references: [id])
+  tasks     Task[]  
+}
+
+model Task {
+  id            Int       @id @default(autoincrement())
+  heading       String
+  description   String?
+  startDate     DateTime
+  dueDate       DateTime
+  priority      Priority
+  status        Status
+  taskCategory  TaskCategory 
+  assignee    String
+  boardId       Int     
+  board         Board     @relation(fields: [boardId], references: [id])
+}
+
+enum Status {
+  On_Track
+  Off_Risk
+  At_Risk
+}
+
+enum TaskCategory {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum Priority {
+  Low
+  Medium
+  High
 }

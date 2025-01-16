@@ -29,6 +29,8 @@ export default function Login() {
         password: password,
       });
       if (response.status === 200) {
+        const { token } = response.data;
+        localStorage.setItem('authToken', token);
         navigate('/', { replace: true });
       }
     } catch (err) {

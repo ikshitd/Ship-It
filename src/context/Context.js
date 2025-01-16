@@ -1,61 +1,39 @@
-import React, { useState, useContext, createContext } from 'react';
+import React, { useState, useContext, createContext, useEffect } from 'react';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 const AppContext = createContext();
 
 export function AppContextProvider({ children }) {
-  const [boards, setBoards] = useState([
-    {
-      id: 1,
-      name: 'Board 1',
-      tasks: {
-        NOT_STARTED: [
-          {
-            id: 'task-1',
-            heading: '[Advance Payment]: Implementing UpdatePaymentConfiguration API',
-            assigneeId: 'Ikshit',
-            startDate: new Date('2021-09-01'),
-            dueDate: new Date('2021-10-10'),
-            description: 'Something about the task here !!',
-            priority: 'Medium',
-            status: 'At Risk',
-          },
-          {
-            id: 'task-2',
-            heading: 'Another Payments',
-            assigneeId: 'Some Radom User',
-            startDate: new Date(),
-            dueDate: new Date(),
-            description: 'Something about the task here !!',
-            priority: 'High',
-            status: 'On Track',
-          },
-        ],
-        IN_PROGRESS: [],
-        BLOCKED: [],
-        DONE: [
-          {
-            id: 'task-3',
-            heading: 'Advance Payments',
-            assigneeId: 'user_id',
-            startDate: Date(),
-            dueDate: Date(),
-            description: 'Something about the task here !!',
-            priority: 'Low',
-            status: 'Off Risk',
-          },
-        ],
-      },
-    },
-    {
-      id: 2,
-      name: 'Board 2',
-      tasks: {
-        NOT_STARTED: [],
-        DONE: [],
-      },
-    },
-  ]);
+  const [boards, setBoards] = useState([]);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      const decoded = jwtDecode(token);
+      setUserId(decoded.userId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      const fetchData = async () => {
+        try {
+          const token = localStorage.getItem('authToken');
+          const response = await axios.get(`http://localhost:3001/boards?userId=${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setBoards(response.data);
+        } catch (error) {
+          console.error('Error fetching boards:', error);
+        }
+      };
+
+      fetchData();
+    }
+  }, [userId]);
 
   function handleDescriptionChange(boardId, columnId, taskId, newDescription) {
     setBoards((prevBoards) =>
@@ -110,15 +88,7 @@ export function AppContextProvider({ children }) {
     setSelectedBoardId(boardId);
   }
 
-  // function addBoard(name) {
-  //   const newBoard = {
-  //     id: boards.length + 1,
-  //     name,
-  //     tasks: { NOT_STARTED: [], IN_PROGRESS: [], BLOCKED: [], DONE: [] },
-  //   };
-  //   setBoards([...boards, newBoard]);
-  //   setSelectedBoardId(newBoard.id);
-  // }
+  function addBoard(name) {}
 
   function updateBoard(board, source, destination, sourceColumn, destinationColumn) {
     setBoards((prevBoards) =>

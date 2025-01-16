@@ -1,12 +1,18 @@
 import { Layout, Menu, Divider, List, Avatar } from 'antd';
 import { useAppContext } from '../../context/Context.js';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Board from '../Board/Board.js';
 
 export default function Sidebar() {
   const { boards } = useAppContext();
   const { Sider, Content } = Layout;
-  const [currentBoardId, setCurrentBoardId] = useState(boards[0]?.id);
+  const [currentBoardId, setCurrentBoardId] = useState(null);
+
+  useEffect(() => {
+    if (boards.length > 0) {
+      setCurrentBoardId(boards[0]?.id);
+    }
+  }, [boards]);
 
   const handleMenuClick = ({ key }) => {
     setCurrentBoardId(parseInt(key, 10));
@@ -33,19 +39,23 @@ export default function Sidebar() {
         }}
       >
         <div style={{ padding: '16px' }}>
-          <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}> Boards </h3>
-          <Menu
-            mode="inline"
-            defaultSelectedKeys={[boards[0]?.id.toString()]}
-            items={menuItems} // Use the `items` prop
-            style={{
-              border: 0,
-              fontSize: '16px',
-              fontWeight: '500',
-              margin: '0px',
-              borderRadius: '10px',
-            }}
-          />
+          <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}>Boards</h3>
+          {boards.length > 0 ? (
+            <Menu
+              mode="inline"
+              defaultSelectedKeys={[boards[0]?.id.toString()]}
+              items={menuItems}
+              style={{
+                border: 0,
+                fontSize: '16px',
+                fontWeight: '500',
+                margin: '0px',
+                borderRadius: '10px',
+              }}
+            />
+          ) : (
+            <p style={{ textAlign: 'center', color: '#888' }}>No boards available.</p>
+          )}
         </div>
         <Divider style={{ margin: '12px 0' }} />
         <div style={{ padding: '16px' }}>
