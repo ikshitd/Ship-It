@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id          Int      @id @default(autoincrement()) // Auto-incrementing primary key
+  title       String   // Non-nullable field
+  description String?  // Nullable field
+  createdAt   DateTime @default(now()) // Default to current timestamp
+  @@map("task") // This makes sure the model maps to the 'task' table in lowercase
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String @default("TestUser")
+  email    String   @unique
+  password String
+}

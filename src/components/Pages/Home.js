@@ -1,4 +1,4 @@
-import Sidebar from '../Bar/Sidebar';
+import Sidebar from '../Bar/Sidebar.js';
 
 export default function App() {
   return (

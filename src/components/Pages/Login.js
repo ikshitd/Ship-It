@@ -11,17 +11,17 @@ export default function Login() {
   });
   const { email, password } = formData;
 
-  const onChange = (e) => {
+  function onChange(e) {
     setFormData((prevState) => ({
       ...prevState,
       [e.target.id]: e.target.value,
     }));
-  };
+  }
 
-  const onSubmit = (e) => {
+  async function onSubmit(e) {
     e.preventDefault();
     // TODO: Set Item to LocalStorage
-  };
+  }
 
   return (
     <div className="authenticationPage">

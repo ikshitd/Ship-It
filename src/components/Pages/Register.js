@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ReactComponent as ArrowRightIcon } from '../../assets/svg/keyboardArrowRightIcon.svg';
 import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
+import axios from 'axios';
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +12,8 @@ export default function Register() {
     password: '',
   });
   const { name, email, password } = formData;
+  const [error, setError] = useState(null);
+  let navigate = useNavigate();
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -21,7 +24,23 @@ export default function Register() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Register the user on the platform
+    setError(null);
+    try {
+      const response = await axios.post('http://localhost:3001/register', {
+        username: name,
+        email: email,
+        password: password,
+      });
+      if (response.status === 200) {
+        navigate('/login', { replace: true });
+      }
+    } catch (err) {
+      if (err.response) {
+        setError(err.response.data?.message || 'Registration failed');
+      } else {
+        setError('An unknown error occurred');
+      }
+    }
   };
 
   return (
@@ -73,6 +92,7 @@ export default function Register() {
               <ArrowRightIcon fill="#ffffff" width="34px" height="34px" />
             </button>
           </div>
+          {error && <p className="errorText">{error}</p>}
         </form>
 
         <Link to="/login" className="registerLink">

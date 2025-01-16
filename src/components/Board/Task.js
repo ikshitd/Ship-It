@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Tag, Drawer, Input, Select } from 'antd';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useAppContext } from '../../context/Context';
+import { useAppContext } from '../../context/Context.js';
 
 export default function Task({ board, columnId, taskId, task }) {
   const {

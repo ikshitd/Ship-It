@@ -1,7 +1,7 @@
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import Task from './Task';
+import Task from './Task.js';
 import { Button } from 'antd';
-import { useAppContext } from '../../context/Context';
+import { useAppContext } from '../../context/Context.js';
 
 export default function Board({ board }) {
   const { handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
