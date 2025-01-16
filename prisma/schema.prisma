@@ -31,9 +31,9 @@ model Task {
   dueDate       DateTime
   priority      Priority
   status        Status
-  taskCategory  TaskCategory 
+  taskCategory  TaskCategory
   assignee    String
-  boardId       Int     
+  boardId       Int   
   board         Board     @relation(fields: [boardId], references: [id])
 }
 

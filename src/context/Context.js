@@ -161,6 +161,7 @@ export function AppContextProvider({ children }) {
     );
   }
   const value = {
+    userId,
     boards,
     selectedBoardId,
     updateTask,

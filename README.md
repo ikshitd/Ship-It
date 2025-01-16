@@ -1,8 +1,8 @@
 ## TODO
 
-- ### Backend
-  - Create and Add the backend server.
-  - Determine the database to be used. - MOST LIKELY SQL + PRISMA
+- ### Frontend & Backend
+  - To complete the task updates and board addition.
+  - The Drag and Drop functionality has also stopped working. So Fix that too...
 
 # Getting Started with Create React App
 

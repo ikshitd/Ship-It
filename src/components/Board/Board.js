@@ -2,13 +2,23 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Task from './Task.js';
 import { Button } from 'antd';
 import { useAppContext } from '../../context/Context.js';
+import axios from 'axios';
+
 export default function Board({ board }) {
-  const { handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
+  const { userId, handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const tasks = {
     ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
-    ...board.tasks,
+
+    ...board.tasks.reduce((acc, task) => {
+      const taskCategory = task.taskCategory;
+      if (DEFAULT_COLUMNS.includes(taskCategory)) {
+        acc[taskCategory] = acc[taskCategory] || [];
+        acc[taskCategory].push(task);
+      }
+      return acc;
+    }, {}),
   };
 
   function onDragEnd(result) {
@@ -24,9 +34,25 @@ export default function Board({ board }) {
     updateBoard(board, source, destination, sourceColumn, destinationColumn);
   }
 
-  function addTask(columnId) {
-    console.log(`Adding the task: ${columnId}`);
-    // TODO: To add the logic for addition of the tasks.
+  async function addTask(columnId) {
+    try {
+      const response = await axios.post(
+        'http://localhost:3001/add-task',
+        {
+          userId: userId,
+          boardId: board.id,
+          columnId: columnId,
+          taskDetails: {},
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.error('Unable to create a new task: ', err);
+    }
   }
 
   return (
@@ -62,7 +88,7 @@ export default function Board({ board }) {
                     </Button>
                   </div>
                   {tasks[columnId].map((task, index) => (
-                    <Draggable key={task.id} draggableId={task.id} index={index}>
+                    <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
                       {(provided) => (
                         <div
                           ref={provided.innerRef}

@@ -111,3 +111,44 @@ app.post('/add-board', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Failed to create board' });
   }
 });
+
+app.post('/add-task', authenticate, async (req, res) => {
+  console.log('HERE');
+  try {
+    const { userId, boardId, columnId, taskDetails } = req.body;
+    if (!userId || !boardId || !columnId || !taskDetails) {
+      res.status(500).json({ error: 'Missing required fields' });
+    }
+    const board = await prisma.board.findFirst({ where: { id: boardId, userId: userId } });
+    console.log('board: ', board);
+    if (!board) {
+      return res
+        .status(404)
+        .json({ error: `Board not found for the boardId: ${boardId} and userId: ${userId}` });
+    }
+    console.log('We got all the params..');
+    console.log('Creating the task');
+    const newTask = await prisma.task.create({
+      data: {
+        heading: taskDetails.heading || 'Add Something!!',
+        description: taskDetails.description || null,
+        startDate: taskDetails.startDate ? new Date(taskDetails.startDate) : new Date(),
+        dueDate: taskDetails.dueDate
+          ? new Date(taskDetails.dueDate)
+          : new Date(new Date().setDate(new Date().getDate() + 3)),
+        priority: taskDetails.priority || 'Low',
+        status: taskDetails.status || 'On_Track',
+        taskCategory: columnId,
+        assignee: taskDetails.assignee || 'Rufus',
+        taskCategory: columnId,
+        board: {
+          connect: { id: boardId },
+        },
+      },
+    });
+    res.status(200).json({ message: 'Task added successfully', task: newTask });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 'An error occurred while adding the task' });
+  }
+});
