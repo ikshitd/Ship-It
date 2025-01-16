@@ -88,7 +88,6 @@ app.get('/boards', authenticate, async (req, res) => {
     const boards = await prisma.board.findMany({ where: { userId: userId }, include: { tasks: true } });
     res.json(boards);
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: `Error fetching boards for userId: ${req.userId}` });
   }
 });
@@ -113,21 +112,17 @@ app.post('/add-board', authenticate, async (req, res) => {
 });
 
 app.post('/add-task', authenticate, async (req, res) => {
-  console.log('HERE');
   try {
     const { userId, boardId, columnId, taskDetails } = req.body;
     if (!userId || !boardId || !columnId || !taskDetails) {
       res.status(500).json({ error: 'Missing required fields' });
     }
     const board = await prisma.board.findFirst({ where: { id: boardId, userId: userId } });
-    console.log('board: ', board);
     if (!board) {
       return res
         .status(404)
         .json({ error: `Board not found for the boardId: ${boardId} and userId: ${userId}` });
     }
-    console.log('We got all the params..');
-    console.log('Creating the task');
     const newTask = await prisma.task.create({
       data: {
         heading: taskDetails.heading || 'Add Something!!',
@@ -148,7 +143,6 @@ app.post('/add-task', authenticate, async (req, res) => {
     });
     res.status(200).json({ message: 'Task added successfully', task: newTask });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: 'An error occurred while adding the task' });
   }
 });
