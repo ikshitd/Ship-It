@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Task from './Task.js';
 import { Button } from 'antd';
@@ -8,10 +9,10 @@ export default function Board({ board }) {
   const { userId, handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
-  const tasks = {
+  const [tasks, setTasks] = useState({
     ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
 
-    ...board.tasks.reduce((acc, task) => {
+    ...(Array.isArray(board.tasks) ? board.tasks : []).reduce((acc, task) => {
       const taskCategory = task.taskCategory;
       if (DEFAULT_COLUMNS.includes(taskCategory)) {
         acc[taskCategory] = acc[taskCategory] || [];
@@ -19,22 +20,20 @@ export default function Board({ board }) {
       }
       return acc;
     }, {}),
-  };
+  });
 
-  function onDragEnd(result) {
+  async function onDragEnd(result) {
     const { source, destination } = result;
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
       return;
     }
     const sourceColumn = tasks[source.droppableId];
-    const [movedTask] = sourceColumn.splice(source.index, 1);
-    const destinationColumn = tasks[destination.droppableId];
-    destinationColumn.splice(destination.index, 0, movedTask);
-    updateBoard(board, source, destination, sourceColumn, destinationColumn);
+    updateBoard(board, source, destination, sourceColumn);
   }
 
-  async function addTask(columnId) {
+  async function addTask(e, columnId) {
+    e.preventDefault();
     try {
       const response = await axios.post(
         'http://localhost:3001/add-task',
@@ -82,7 +81,7 @@ export default function Board({ board }) {
                       style={{ fontSize: '13px' }}
                       type="secondary"
                       size="small"
-                      onClick={() => addTask(columnId)}
+                      onClick={(e) => addTask(e, columnId)}
                     >
                       Add Task
                     </Button>

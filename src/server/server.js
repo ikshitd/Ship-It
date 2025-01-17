@@ -146,3 +146,30 @@ app.post('/add-task', authenticate, async (req, res) => {
     res.status(500).json({ error: 'An error occurred while adding the task' });
   }
 });
+
+app.post('/update-task-category', authenticate, async (req, res) => {
+  try {
+    const { boardId, taskId, newCategory } = req.body;
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      include: { tasks: true },
+    });
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    const task = board.tasks.find((t) => t.id === taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        taskCategory: newCategory,
+      },
+    });
+    return res.status(200).json({ message: 'Task updated successfully', task: updatedTask });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 'An error occurred while updating the task' });
+  }
+});
