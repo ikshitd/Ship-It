@@ -76,9 +76,15 @@ export default function Task({ board, columnId, taskId, task }) {
               marginTop: '10px',
               marginBottom: '10px',
             }}
-            color={task.status === 'On Track' ? '#18c4ab' : task.status === 'At Risk' ? '#f7b100' : '#171511'}
+            color={
+              task.status.replace('_', ' ') === 'On Track'
+                ? '#18c4ab'
+                : task.status === 'At Risk'
+                  ? '#f7b100'
+                  : '#171511'
+            }
           >
-            <div style={{ marginTop: '3px' }}>{task.status}</div>
+            <div style={{ marginTop: '3px' }}>{task.status.replace('_', ' ')}</div>
           </Tag>
         ) : null}
         <Drawer
