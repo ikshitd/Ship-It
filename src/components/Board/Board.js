@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Task from './Task.js';
 import { Button } from 'antd';
 import { useAppContext } from '../../context/Context.js';
 import axios from 'axios';
+import socket from '../../socket/socket.js';
 
 export default function Board({ board }) {
   const { userId, handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
@@ -22,6 +23,22 @@ export default function Board({ board }) {
     }, {}),
   });
 
+  useEffect(() => {
+    socket.on('taskUpdated', (updatedTask) => {
+      setTasks((prevTasks) => {
+        const updatedTasks = { ...prevTasks };
+        Object.keys(updatedTasks).forEach((category) => {
+          updatedTasks[category] = updatedTasks[category].filter((task) => task.id !== updatedTask.id);
+        });
+        updatedTasks[updatedTask.taskCategory].push(updatedTask);
+        return updatedTasks;
+      });
+    });
+    return () => {
+      socket.off('taskUpdated');
+    };
+  }, []);
+
   async function onDragEnd(result) {
     const { source, destination } = result;
     if (!destination) return;
@@ -29,7 +46,20 @@ export default function Board({ board }) {
       return;
     }
     const sourceColumn = tasks[source.droppableId];
-    updateBoard(board, source, destination, sourceColumn);
+    const [movedTask] = sourceColumn.splice(source.index, 1);
+    const destinationColumn = tasks[destination.droppableId];
+    destinationColumn.splice(destination.index, 0, movedTask);
+
+    setTasks({
+      ...tasks,
+      [source.droppableId]: sourceColumn,
+      [destination.droppableId]: destinationColumn,
+    });
+    socket.emit('taskMoved', {
+      boardId: board.id,
+      taskId: movedTask.id,
+      newCategory: destination.droppableId,
+    });
   }
 
   async function addTask(e, columnId) {
