@@ -88,8 +88,6 @@ export function AppContextProvider({ children }) {
     setSelectedBoardId(boardId);
   }
 
-  function addBoard(name) {}
-
   async function updateBoard(board, source, destination, sourceColumn) {
     const movedTask = sourceColumn[source.index];
     try {
@@ -106,7 +104,7 @@ export function AppContextProvider({ children }) {
           },
         }
       );
-      if (response.status == 200) {
+      if (response.status === 200) {
         setBoards((prevBoards) =>
           prevBoards.map((boardItem) =>
             boardItem.id === board.id

@@ -7,7 +7,7 @@ import axios from 'axios';
 import socket from '../../socket/socket.js';
 
 export default function Board({ board }) {
-  const { userId, handleDescriptionChange, handleDateChange, updateBoard } = useAppContext();
+  const { userId, handleDescriptionChange, handleDateChange } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const [tasks, setTasks] = useState({
@@ -65,7 +65,7 @@ export default function Board({ board }) {
   async function addTask(e, columnId) {
     e.preventDefault();
     try {
-      const response = await axios.post(
+      await axios.post(
         'http://localhost:3001/add-task',
         {
           userId: userId,

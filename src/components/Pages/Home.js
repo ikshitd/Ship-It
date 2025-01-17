@@ -1,4 +1,4 @@
-import { Layout, Menu, Divider, List, Avatar, Button } from 'antd';
+import { Layout, Menu, Divider, List, Avatar } from 'antd';
 import { useAppContext } from '../../context/Context.js';
 import { useState, useEffect } from 'react';
 import Board from '../Board/Board.js';
