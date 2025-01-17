@@ -2,7 +2,7 @@
 
 - ### Frontend & Backend
   - To complete the task updates and board addition.
-  - The Drag and Drop functionality has also stopped working. So Fix that too...
+  - To understand how socket.io works and how the real time updates are happening behind the scene.
 
 # Getting Started with Create React App
 

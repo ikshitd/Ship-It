@@ -950,3 +950,9 @@ h3 {
   margin-left: 25px;
   padding-bottom: 7px;
 }
+
+.custom-menu .ant-menu-item-selected {
+  background-color: #e0f7fa !important; /* Light teal background */
+  color: #00796b !important; /* Teal text color */
+  font-weight: 600 !important; /* Bold font */
+}
