@@ -3,15 +3,12 @@ import { Tag, Drawer, Input, Select, DatePicker } from 'antd';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useAppContext } from '../../context/Context.js';
 import moment from 'moment';
+import socket from '../../socket/socket.js';
+import dayjs from 'dayjs';
 
 export default function Task({ board, columnId, taskId, task }) {
-  const {
-    handleDateChange,
-    handleDescriptionChange,
-    handleTaskHeadingUpdate,
-    handlePriorityChange,
-    handleStatusChange,
-  } = useAppContext();
+  const { handleDateChange, handleDescriptionChange, handlePriorityChange, handleStatusChange, updateTask } =
+    useAppContext();
 
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -25,6 +22,20 @@ export default function Task({ board, columnId, taskId, task }) {
   const endDate = dueDate.getDate();
   const endMonth = dueDate.toLocaleString('default', { month: 'short' });
   const { Option } = Select;
+
+  async function handleTaskUpdate(updatedDetails) {
+    try {
+      updateTask(boardId, taskId, updatedDetails);
+      socket.emit('taskUpdated', {
+        boardId: boardId,
+        taskId: taskId,
+        columnId: columnId,
+        taskDeatils: updatedDetails,
+      });
+    } catch (err) {
+      console.error('Unable to update the task deatil', err);
+    }
+  }
 
   return (
     <div
@@ -110,7 +121,8 @@ export default function Task({ board, columnId, taskId, task }) {
                     setNewHeading(e.target.value);
                   }}
                   onBlur={() => {
-                    handleTaskHeadingUpdate(boardId, columnId, taskId, newHeading);
+                    const updatedDetails = { heading: newHeading };
+                    handleTaskUpdate(updatedDetails);
                     setIsEditing(false);
                   }}
                   autoFocus
@@ -136,7 +148,7 @@ export default function Task({ board, columnId, taskId, task }) {
                 </label>
                 <DatePicker
                   id="startDate"
-                  value={moment(beginDate)}
+                  value={dayjs(new Date(task.startDate))}
                   onChange={(date) => handleDateChange(boardId, columnId, task.id, 'startDate', date)}
                   format="YYYY-MM-DD"
                 />
@@ -156,7 +168,7 @@ export default function Task({ board, columnId, taskId, task }) {
                 </label>
                 <DatePicker
                   id="endDate"
-                  value={moment(dueDate)}
+                  value={dayjs(dueDate)}
                   onChange={(date) => handleDateChange(boardId, columnId, task.id, 'dueDate', date)}
                   format="YYYY-MM-DD"
                 />

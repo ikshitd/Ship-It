@@ -58,6 +58,7 @@ export default function Register() {
             id="name"
             value={name}
             onChange={onChange}
+            style={{ fontSize: '20px' }}
           />
           <input
             type="email"
@@ -66,6 +67,7 @@ export default function Register() {
             id="email"
             value={email}
             onChange={onChange}
+            style={{ fontSize: '20px' }}
           />
 
           <div className="passwordInputDiv">
@@ -76,6 +78,7 @@ export default function Register() {
               id="password"
               value={password}
               onChange={onChange}
+              style={{ fontSize: '20px' }}
             />
 
             <img

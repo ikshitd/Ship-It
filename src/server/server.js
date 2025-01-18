@@ -26,18 +26,23 @@ io.on('connection', (socket) => {
   console.log('A user is connected with the id: ', socket.id);
   socket.on('joinBoard', (boardId) => {
     console.log(`User joined board: ${boardId}`);
-    ssocket.join(`board-${boardId}`);
+    socket.join(`board-${boardId}`);
   });
+
   socket.on('taskMoved', async ({ boardId, taskId, newCategory }) => {
     try {
       const updatedTask = await prisma.task.update({
         where: { id: taskId },
         data: { taskCategory: newCategory },
       });
-      io.to(`board-${boardId}`).emit('taskUpdated', updatedTask);
+      io.emit('taskMoved', updatedTask);
     } catch (err) {
       console.error('Error updating task category:', err);
     }
+  });
+
+  socket.on('taskUpdated', (data) => {
+    io.emit('taskUpdated', data);
   });
 
   socket.on('disconnect', () => {
@@ -197,13 +202,11 @@ app.post('/update-task-category', authenticate, async (req, res) => {
     });
     return res.status(200).json({ message: 'Task updated successfully', task: updatedTask });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: 'An error occurred while updating the task' });
   }
 });
 
 app.post('/update-task', authenticate, async (req, res) => {
-  console.log('HERE');
   try {
     const { boardId, taskId, taskDetails } = req.body;
     if (!boardId || !taskId || !taskDetails) {
@@ -223,7 +226,6 @@ app.post('/update-task', authenticate, async (req, res) => {
     });
     res.status(200).json({ message: 'Task updated succesfully', task: updatedTask });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: 'An error occurred while updating the task' });
   }
 });

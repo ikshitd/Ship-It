@@ -71,17 +71,24 @@ export function AppContextProvider({ children }) {
     );
   }
 
-  function updateTask(boardId, taskId, updatedTask) {
-    setBoards((prevBoards) =>
-      prevBoards.map((board) =>
-        board.id === boardId
-          ? {
-              ...board,
-              tasks: board.tasks.map((task) => (task.id === taskId ? { ...task, ...updatedTask } : task)),
-            }
-          : board
-      )
-    );
+  async function updateTask(boardId, taskId, updatedDetails) {
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.post(
+        'http://localhost:3001/update-task',
+        {
+          boardId: boardId,
+          taskId: taskId,
+          taskDetails: updatedDetails,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (err) {
+      console.error('Unable to update the task', err);
+      throw err;
+    }
   }
 
   function handleBoardClick(boardId) {
@@ -126,7 +133,6 @@ export function AppContextProvider({ children }) {
         );
       }
     } catch (err) {
-      console.log(err);
       console.error('Unable to update the task category');
     }
   }

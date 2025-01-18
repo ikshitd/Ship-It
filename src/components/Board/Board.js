@@ -7,7 +7,7 @@ import axios from 'axios';
 import socket from '../../socket/socket.js';
 
 export default function Board({ board }) {
-  const { userId, handleDescriptionChange, handleDateChange } = useAppContext();
+  const { userId, handleDescriptionChange, handleDateChange, taskUpdate } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const [tasks, setTasks] = useState({
@@ -24,7 +24,7 @@ export default function Board({ board }) {
   });
 
   useEffect(() => {
-    socket.on('taskUpdated', (updatedTask) => {
+    socket.on('taskMoved', (updatedTask) => {
       setTasks((prevTasks) => {
         const updatedTasks = { ...prevTasks };
         Object.keys(updatedTasks).forEach((category) => {
@@ -35,9 +35,32 @@ export default function Board({ board }) {
       });
     });
     return () => {
+      socket.off('taskMoved');
+    };
+  }, [board.id]);
+
+  useEffect(() => {
+    socket.on('taskUpdated', (updatedTask) => {
+      const { taskId, columnId, updatedDetails } = updatedTask;
+      setTasks((prevTasks) => {
+        const updatedTasks = { ...prevTasks };
+        if (updatedTasks[columnId]) {
+          const taskIndex = updatedTasks[columnId].findIndex((task) => task.id === taskId);
+          if (taskIndex !== -1) {
+            updatedTasks[columnId][taskIndex] = { ...updatedTasks[columnId][taskIndex], ...updatedDetails };
+          }
+        } else {
+          console.error('Invalid columnId:', columnId);
+        }
+        return updatedTasks;
+      });
+      window.location.reload();
+      /* TODO: REMOVE THIS RELOAD ON THE HEADING UPDATE */
+    });
+    return () => {
       socket.off('taskUpdated');
     };
-  }, []);
+  }, [board.tasks]);
 
   async function onDragEnd(result) {
     const { source, destination } = result;
