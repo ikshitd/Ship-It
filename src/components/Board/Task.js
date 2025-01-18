@@ -29,7 +29,6 @@ export default function Task({ board, columnId, taskId, task }) {
   const { Option } = Select;
 
   const handleInputChange = (field, value) => {
-    console.log(`field: ${field}, value: ${value}`);
     setUpdatedTaskDetails((prevDetails) => ({
       ...prevDetails,
       [field]: value,

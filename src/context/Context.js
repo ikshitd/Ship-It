@@ -8,6 +8,7 @@ export function AppContextProvider({ children }) {
   const [boards, setBoards] = useState([]);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [userId, setUserId] = useState(null);
+  const [isDrawerVisible, setDrawerVisible] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -63,8 +64,10 @@ export function AppContextProvider({ children }) {
     userId,
     boards,
     selectedBoardId,
+    isDrawerVisible,
     updateTask,
     handleBoardClick,
+    setDrawerVisible,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
