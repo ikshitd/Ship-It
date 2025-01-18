@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tag, Drawer, Input, Select, DatePicker } from 'antd';
+import { Tag, Drawer, Input, Select, DatePicker, Button } from 'antd';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useAppContext } from '../../context/Context.js';
 import socket from '../../socket/socket.js';
@@ -12,6 +12,14 @@ export default function Task({ board, columnId, taskId, task }) {
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newHeading, setNewHeading] = useState(task.heading);
+  const [updatedTaskDetails, setUpdatedTaskDetails] = useState({
+    heading: task.heading,
+    startDate: new Date(task.startDate),
+    dueDate: new Date(task.dueDate),
+    priority: task.priority,
+    status: task.status,
+    description: task.description || '',
+  });
 
   const boardId = board.id;
   const beginDate = new Date(task.startDate);
@@ -22,19 +30,29 @@ export default function Task({ board, columnId, taskId, task }) {
   const endMonth = dueDate.toLocaleString('default', { month: 'short' });
   const { Option } = Select;
 
-  async function handleTaskUpdate(updatedDetails) {
+  const handleInputChange = (field, value) => {
+    console.log(`field: ${field}, value: ${value}`);
+    setUpdatedTaskDetails((prevDetails) => ({
+      ...prevDetails,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = () => {
     try {
-      updateTask(boardId, taskId, updatedDetails);
+      console.log('Submitting task details:', updatedTaskDetails);
+      updateTask(boardId, taskId, updatedTaskDetails);
       socket.emit('taskUpdated', {
-        boardId: boardId,
-        taskId: taskId,
-        columnId: columnId,
-        taskDeatils: updatedDetails,
+        boardId,
+        taskId,
+        columnId,
+        taskDetails: updatedTaskDetails,
       });
+      setDrawerVisible(false);
     } catch (err) {
-      console.error('Unable to update the task deatil', err);
+      console.error('Unable to update the task details', err);
     }
-  }
+  };
 
   return (
     <div
@@ -111,132 +129,101 @@ export default function Task({ board, columnId, taskId, task }) {
             motionAppear: true,
           }}
         >
-          <div style={{ padding: '16px', fontFamily: 'Monaco, sans-serif' }}>
-            <section style={{ marginBottom: '24px', textAlign: 'center' }}>
-              {isEditing ? (
-                <Input
-                  value={newHeading}
-                  onChange={(e) => {
-                    setNewHeading(e.target.value);
-                  }}
-                  onBlur={() => {
-                    const updatedDetails = { heading: newHeading };
-                    handleTaskUpdate(updatedDetails);
-                    setIsEditing(false);
-                  }}
-                  autoFocus
-                />
-              ) : (
-                <h3 onClick={() => setIsEditing(true)}>{task.heading}</h3>
-              )}
-            </section>
-            <section style={{ marginBottom: '30px' }}>
-              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Dates</h3>
-              <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
-                <label
-                  htmlFor="startDate"
-                  style={{
-                    display: 'inline-block',
-                    fontWeight: 'bold',
-                    marginRight: '10px',
-                    width: '100px',
-                    textAlign: 'right',
-                  }}
+          <form>
+            <div style={{ padding: '16px', fontFamily: 'Monaco, sans-serif' }}>
+              <section style={{ marginBottom: '24px', textAlign: 'center' }}>
+                {isEditing ? (
+                  <Input
+                    value={newHeading}
+                    onChange={(e) => {
+                      setNewHeading(e.target.value);
+                      handleInputChange('heading', e.target.value);
+                    }}
+                    onBlur={() => setIsEditing(false)}
+                    autoFocus
+                  />
+                ) : (
+                  <h3 onClick={() => setIsEditing(true)}>{updatedTaskDetails.heading}</h3>
+                )}
+              </section>
+              <section style={{ marginBottom: '30px' }}>
+                <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Dates</h3>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
+                  <label htmlFor="startDate" style={{ marginRight: '10px' }}>
+                    Start Date:
+                  </label>
+                  <DatePicker
+                    id="startDate"
+                    value={updatedTaskDetails.startDate ? dayjs(updatedTaskDetails.startDate) : null}
+                    onChange={(date) => handleInputChange('startDate', date ? date.toISOString() : null)}
+                    format="YYYY-MM-DD"
+                  />
+                </div>
+                <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
+                  <label htmlFor="endDate" style={{ marginRight: '10px' }}>
+                    End Date:
+                  </label>
+                  <DatePicker
+                    id="endDate"
+                    value={updatedTaskDetails.dueDate ? dayjs(updatedTaskDetails.dueDate) : null}
+                    onChange={(date) => handleInputChange('dueDate', date ? date.toISOString() : null)}
+                    format="YYYY-MM-DD"
+                  />
+                </div>
+              </section>
+              <section style={{ marginBottom: '30px' }}>
+                <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Priority</h3>
+                <Select
+                  value={updatedTaskDetails.priority}
+                  onChange={(value) => handleInputChange('priority', value)}
+                  style={{ width: '100%' }}
                 >
-                  Start Date:
-                </label>
-                <DatePicker
-                  id="startDate"
-                  value={dayjs(new Date(task.startDate))}
-                  onChange={(date) => handleDateChange(boardId, columnId, task.id, 'startDate', date)}
-                  format="YYYY-MM-DD"
-                />
-              </div>
-              <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
-                <label
-                  htmlFor="endDate"
-                  style={{
-                    display: 'inline-block',
-                    fontWeight: 'bold',
-                    marginRight: '10px',
-                    width: '100px',
-                    textAlign: 'right',
-                  }}
+                  <Option value="Low">Low</Option>
+                  <Option value="Medium">Medium</Option>
+                  <Option value="High">High</Option>
+                </Select>
+              </section>
+              <section style={{ marginBottom: '30px' }}>
+                <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Status</h3>
+                <Select
+                  value={updatedTaskDetails.status.replace('_', ' ')}
+                  onChange={(value) => handleInputChange('status', value.replace(/\s+/g, '_'))}
+                  style={{ width: '100%' }}
                 >
-                  End Date:
-                </label>
-                <DatePicker
-                  id="endDate"
-                  value={dayjs(dueDate)}
-                  onChange={(date) => handleDateChange(boardId, columnId, task.id, 'dueDate', date)}
-                  format="YYYY-MM-DD"
+                  <Option value="On Track">On Track</Option>
+                  <Option value="At Risk">At Risk</Option>
+                  <Option value="Off Risk">Off Risk</Option>
+                </Select>
+              </section>
+              <section style={{ marginBottom: '30px' }}>
+                <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>
+                  Task Description
+                </h3>
+                <textarea
+                  value={updatedTaskDetails.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Enter task description..."
+                  style={{
+                    width: '100%',
+                    height: '120px',
+                    padding: '12px',
+                    fontSize: '16px',
+                    fontFamily: 'Monaco',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc',
+                    outline: 'none',
+                    backgroundColor: '#f9f9f9',
+                    resize: 'none',
+                  }}
                 />
+              </section>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                <Button type="primary" onClick={handleSubmit} style={{ width: '50%' }}>
+                  Update
+                </Button>
               </div>
-            </section>{' '}
-            <section style={{ marginBottom: '30px' }}>
-              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Assignee</h3>
-              <p style={{ margin: '0 0 16px 0', paddingLeft: '10px' }}>
-                <strong>Assigned To:</strong> {task.assigneeId || 'Unassigned'}
-              </p>
-            </section>
-            <section style={{ marginBottom: '30px' }}>
-              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Details</h3>
-              <strong> Priority: </strong>
-
-              <Select
-                value={task.priority}
-                onChange={(value) => handlePriorityChange(boardId, columnId, taskId, value)}
-                style={{
-                  width: '20%',
-                  borderRadius: '8px',
-                  marginBottom: '12px',
-                }}
-                dropdownStyle={{ borderRadius: '2px' }}
-              >
-                <Option value="Low">Low</Option>
-                <Option value="Medium">Medium</Option>
-                <Option value="High">High</Option>
-              </Select>
-
-              <strong> Status: </strong>
-              <Select
-                value={task.status}
-                onChange={(value) => handleStatusChange(boardId, columnId, taskId, value)}
-                style={{
-                  width: '20%',
-                  borderRadius: '8px',
-                }}
-                dropdownStyle={{ borderRadius: '8px' }}
-              >
-                <Option value="At Risk">At Risk</Option>
-                <Option value="Off Risk">Off Risk</Option>
-                <Option value="On Track">On Track</Option>
-              </Select>
-            </section>
-            <section style={{ marginBottom: '30px' }}>
-              <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Description</h3>
-              <textarea
-                id="taskDescription"
-                value={task.description || ''}
-                onChange={(e) => handleDescriptionChange(boardId, columnId, taskId, e.target.value)}
-                placeholder="Enter task description..."
-                style={{
-                  width: '100%',
-                  height: '120px',
-                  padding: '12px',
-                  fontSize: '16px',
-                  fontFamily: 'Monaco',
-                  borderRadius: '8px',
-                  border: '1px solid #ccc',
-                  outline: 'none',
-                  backgroundColor: '#f9f9f9',
-                  boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                  transition: 'border-color 0.3s, box-shadow 0.3s',
-                  resize: 'none',
-                }}
-              />
-            </section>
-          </div>
+            </div>
+          </form>
         </Drawer>
       </div>
     </div>

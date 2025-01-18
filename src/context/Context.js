@@ -95,48 +95,6 @@ export function AppContextProvider({ children }) {
     setSelectedBoardId(boardId);
   }
 
-  async function updateBoard(board, source, destination, sourceColumn) {
-    const movedTask = sourceColumn[source.index];
-    try {
-      const response = await axios.post(
-        'http://localhost:3001/update-task-category',
-        {
-          boardId: board.id,
-          taskId: movedTask.id,
-          newCategory: destination.droppableId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
-      if (response.status === 200) {
-        setBoards((prevBoards) =>
-          prevBoards.map((boardItem) =>
-            boardItem.id === board.id
-              ? {
-                  ...boardItem,
-                  tasks: {
-                    ...boardItem.tasks,
-                    [source.droppableId]: boardItem.tasks[source.droppableId]
-                      ? boardItem.tasks[source.droppableId].filter((task) => task.id !== movedTask.id)
-                      : [],
-                    [destination.droppableId]: [
-                      ...(boardItem.tasks[destination.droppableId] || []),
-                      { ...movedTask, taskCategory: destination.droppableId },
-                    ],
-                  },
-                }
-              : boardItem
-          )
-        );
-      }
-    } catch (err) {
-      console.error('Unable to update the task category');
-    }
-  }
-
   function handleTaskHeadingUpdate(boardId, columnId, taskId, newHeading) {
     setBoards((prevBoards) =>
       prevBoards.map((board) =>
@@ -198,7 +156,6 @@ export function AppContextProvider({ children }) {
     handleBoardClick,
     handleDateChange,
     handleDescriptionChange,
-    updateBoard,
     handleTaskHeadingUpdate,
     handlePriorityChange,
     handleStatusChange,
