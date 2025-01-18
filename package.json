@@ -37,7 +37,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "clean": "rimraf build"
+    "clean": "rimraf build",
+    "run-server": "cd src/server && nodemon server.js",
+    "dev": "concurrently \"yarn start\" \"yarn run-server\""
   },
   "eslintConfig": {
     "extends": [
