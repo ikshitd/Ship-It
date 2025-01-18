@@ -213,7 +213,6 @@ app.post('/update-task', authenticate, async (req, res) => {
     if (!board) {
       return res.status(404).json({ error: 'Board not found' });
     }
-    console.log(board);
     const task = board.tasks.find((t) => t.id === taskId);
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
