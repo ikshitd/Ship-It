@@ -6,12 +6,10 @@ import socket from '../../socket/socket.js';
 import dayjs from 'dayjs';
 
 export default function Task({ board, columnId, taskId, task }) {
-  const { handleDateChange, handleDescriptionChange, handlePriorityChange, handleStatusChange, updateTask } =
-    useAppContext();
+  const { updateTask } = useAppContext();
 
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [newHeading, setNewHeading] = useState(task.heading);
   const [updatedTaskDetails, setUpdatedTaskDetails] = useState({
     heading: task.heading,
     startDate: new Date(task.startDate),
@@ -40,7 +38,6 @@ export default function Task({ board, columnId, taskId, task }) {
 
   const handleSubmit = () => {
     try {
-      console.log('Submitting task details:', updatedTaskDetails);
       updateTask(boardId, taskId, updatedTaskDetails);
       socket.emit('taskUpdated', {
         boardId,
@@ -134,9 +131,8 @@ export default function Task({ board, columnId, taskId, task }) {
               <section style={{ marginBottom: '24px', textAlign: 'center' }}>
                 {isEditing ? (
                   <Input
-                    value={newHeading}
+                    value={updatedTaskDetails.heading}
                     onChange={(e) => {
-                      setNewHeading(e.target.value);
                       handleInputChange('heading', e.target.value);
                     }}
                     onBlur={() => setIsEditing(false)}

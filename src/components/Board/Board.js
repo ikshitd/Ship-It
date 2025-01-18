@@ -7,7 +7,7 @@ import axios from 'axios';
 import socket from '../../socket/socket.js';
 
 export default function Board({ board }) {
-  const { userId, handleDescriptionChange, handleDateChange } = useAppContext();
+  const { userId } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const [tasks, setTasks] = useState({
@@ -151,8 +151,6 @@ export default function Board({ board }) {
                             board={board}
                             columnId={columnId}
                             taskId={task.id}
-                            handleDescriptionChange={handleDescriptionChange}
-                            handleDateChange={handleDateChange}
                             key={task.id}
                             task={task}
                           ></Task>
