@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider
-        width={300}
+        width={'15%'}
         style={{
           background: '#f9f9f9',
           borderRight: '1px solid #d9d9d9',
