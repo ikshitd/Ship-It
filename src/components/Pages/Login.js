@@ -53,6 +53,7 @@ export default function Login() {
             id="email"
             value={email}
             onChange={onChange}
+            style={{ fontSize: '20px' }}
           />
 
           <div className="passwordInputDiv">
@@ -63,6 +64,7 @@ export default function Login() {
               id="password"
               value={password}
               onChange={onChange}
+              style={{ fontSize: '20px' }}
             />
 
             <img

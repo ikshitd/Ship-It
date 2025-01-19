@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
 const PORT = process.env.SERVER_PORT || 5002;
 const SALT_ROUNDS = 10;
@@ -12,13 +14,44 @@ const prisma = new PrismaClient();
 
 app.use(express.json());
 app.use(cors()); // allow CORS for all express routes
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('A user is connected with the id: ', socket.id);
+  socket.on('joinBoard', (boardId) => {
+    console.log(`User joined board: ${boardId}`);
+    socket.join(`board-${boardId}`);
+  });
+
+  socket.on('taskMoved', async ({ boardId, taskId, newCategory }) => {
+    try {
+      const updatedTask = await prisma.task.update({
+        where: { id: taskId },
+        data: { taskCategory: newCategory },
+      });
+      io.emit('taskMoved', updatedTask);
+    } catch (err) {
+      console.error('Error updating task category:', err);
+    }
+  });
+
+  socket.on('taskUpdated', (data) => {
+    io.emit('taskUpdated', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 app.get('/', (req, res) => {
   res.send('Welcome to the Taskplanner application!');
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 /* Middleware for authentication */
@@ -145,4 +178,58 @@ app.post('/add-task', authenticate, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'An error occurred while adding the task' });
   }
+});
+
+app.post('/update-task-category', authenticate, async (req, res) => {
+  try {
+    const { boardId, taskId, newCategory } = req.body;
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      include: { tasks: true },
+    });
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    const task = board.tasks.find((t) => t.id === taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        taskCategory: newCategory,
+      },
+    });
+    return res.status(200).json({ message: 'Task updated successfully', task: updatedTask });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while updating the task' });
+  }
+});
+
+app.post('/update-task', authenticate, async (req, res) => {
+  try {
+    const { boardId, taskId, taskDetails } = req.body;
+    if (!boardId || !taskId || !taskDetails) {
+      res.status(500).json({ error: 'Missing required fields' });
+    }
+    const board = await prisma.board.findUnique({ where: { id: boardId }, include: { tasks: true } });
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    const task = board.tasks.find((t) => t.id === taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: taskDetails,
+    });
+    res.status(200).json({ message: 'Task updated succesfully', task: updatedTask });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while updating the task' });
+  }
+});
+
+httpServer.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

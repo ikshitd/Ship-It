@@ -30,10 +30,9 @@ export default function Home() {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider
-        width={300}
-        theme="light"
+        width={'15%'}
         style={{
-          background: '#f0f2f5',
+          background: '#f9f9f9',
           borderRight: '1px solid #d9d9d9',
           overflowY: 'auto',
         }}
@@ -42,15 +41,16 @@ export default function Home() {
           <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}>Boards</h3>
           {boards.length > 0 ? (
             <Menu
-              mode="inline"
+              mode="vertical"
+              className="custom-menu"
               defaultSelectedKeys={[boards[0]?.id.toString()]}
               items={menuItems}
               style={{
+                background: '#f9f9f9',
                 border: 0,
                 fontSize: '16px',
-                fontWeight: '500',
+                fontWeight: '400',
                 margin: '0px',
-                borderRadius: '10px',
               }}
             />
           ) : (
