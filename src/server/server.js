@@ -125,8 +125,11 @@ app.post('/login', async (req, res) => {
 
 app.get('/boards', authenticate, async (req, res) => {
   try {
-    const { userId } = req.body;
-    const boards = await prisma.board.findMany({ where: { userId: userId }, include: { tasks: true } });
+    const userId = parseInt(req.query.userId);
+    const boards = await prisma.board.findMany({
+      where: { userId: userId },
+      include: { tasks: true },
+    });
     res.json(boards);
   } catch (err) {
     res.status(500).json({ error: `Error fetching boards for userId: ${req.userId}` });
