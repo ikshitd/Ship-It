@@ -20,16 +20,6 @@ export default function Footer() {
             <ExploreIcon fill={pathMatchRoute('/') ? '#2c2c2c' : '#8f8f8f'} width="36px" height="36px" />
             <p className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}>Home</p>
           </li>
-          <li className="navbarListItem" onClick={() => navigate('/profile')}>
-            <PersonOutlineIcon
-              fill={pathMatchRoute('/profile') ? '#2c2c2c' : '#8f8f8f'}
-              width="36px"
-              height="36px"
-            />
-            <p className={pathMatchRoute('/profile') ? 'navbarListItemNameActive' : 'navbarListItemName'}>
-              Profile
-            </p>
-          </li>
         </ul>
       </nav>
     </header>
