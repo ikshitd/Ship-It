@@ -55,6 +55,25 @@ export function AppContextProvider({ children }) {
     }
   }
 
+  async function removeTask(boardId, taskId) {
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.post(
+        'http://localhost:3001/remove-task',
+        {
+          boardId: boardId,
+          taskId: taskId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (err) {
+      console.error('Unable to update the task', err);
+      throw err;
+    }
+  }
+
   function handleBoardClick(boardId) {
     setSelectedBoardId(boardId);
   }
@@ -65,6 +84,7 @@ export function AppContextProvider({ children }) {
     selectedBoardId,
     updateTask,
     handleBoardClick,
+    removeTask,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

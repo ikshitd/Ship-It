@@ -49,6 +49,10 @@ io.on('connection', (socket) => {
     io.emit('taskAdded', data);
   });
 
+  socket.on('taskRemoved', (data) => {
+    io.emit('taskRemoved', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });

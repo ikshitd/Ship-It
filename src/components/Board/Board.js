@@ -129,8 +129,22 @@ export default function Board({ board }) {
         console.warn('Task added to a different board, ignoring.');
       }
     });
+
+    socket.on('taskRemoved', ({ taskId, boardId }) => {
+      if (boardId === board.id) {
+        setTasks((prevTasks) => {
+          const updatedTasks = { ...prevTasks };
+          Object.keys(updatedTasks).forEach((category) => {
+            updatedTasks[category] = updatedTasks[category].filter((task) => task.id !== taskId);
+          });
+          return updatedTasks;
+        });
+      }
+    });
+
     return () => {
       socket.off('taskAdded');
+      socket.off('taskRemoved');
     };
   }, [board.tasks, board.id]);
 
