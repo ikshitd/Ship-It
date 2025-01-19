@@ -1,12 +1,14 @@
-import { Layout, Menu, Divider, List, Avatar } from 'antd';
+import { Layout, Menu, Divider, List, Avatar, Button, Modal, Input } from 'antd';
 import { useAppContext } from '../../context/Context.js';
 import { useState, useEffect } from 'react';
 import Board from '../Board/Board.js';
 
 export default function Home() {
-  const { boards } = useAppContext();
+  const { boards, addBoard } = useAppContext(); // Assuming addBoard is available in the context
   const { Sider, Content } = Layout;
   const [currentBoardId, setCurrentBoardId] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newBoardName, setNewBoardName] = useState('');
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -16,6 +18,14 @@ export default function Home() {
 
   const handleMenuClick = ({ key }) => {
     setCurrentBoardId(parseInt(key, 10));
+  };
+
+  const handleAddBoard = () => {
+    if (newBoardName.trim()) {
+      addBoard(newBoardName); // Function to add the new board
+      setNewBoardName('');
+      setIsModalVisible(false);
+    }
   };
 
   const selectedBoard = boards.find((board) => board.id === currentBoardId);
@@ -56,6 +66,13 @@ export default function Home() {
           ) : (
             <p style={{ textAlign: 'center', color: '#888' }}>No boards available.</p>
           )}
+          <Button
+            type="primary"
+            style={{ marginTop: '16px', width: '100%' }}
+            onClick={() => setIsModalVisible(true)}
+          >
+            Add Board
+          </Button>
         </div>
         <Divider style={{ margin: '12px 0' }} />
         <div style={{ padding: '16px' }}>
@@ -94,6 +111,22 @@ export default function Home() {
           )}
         </Content>
       </Layout>
+
+      {/* Modal for adding a new board */}
+      <Modal
+        title="Add New Board"
+        visible={isModalVisible}
+        onOk={handleAddBoard}
+        onCancel={() => setIsModalVisible(false)}
+        okText="Add"
+        cancelText="Cancel"
+      >
+        <Input
+          placeholder="Enter board name"
+          value={newBoardName}
+          onChange={(e) => setNewBoardName(e.target.value)}
+        />
+      </Modal>
     </Layout>
   );
 }

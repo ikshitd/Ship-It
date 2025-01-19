@@ -8,7 +8,7 @@ import socket from '../../socket/socket.js';
 import dayjs from 'dayjs';
 
 export default function Board({ board }) {
-  const { userId, updateTask } = useAppContext();
+  const { userId } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const [tasks, setTasks] = useState({
@@ -48,7 +48,7 @@ export default function Board({ board }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
+      const response = await axios.post(
         'http://localhost:3001/add-task',
         {
           userId: userId,
@@ -62,11 +62,18 @@ export default function Board({ board }) {
           },
         }
       );
+      socket.emit('taskAdded', {
+        userId: userId,
+        boardId: board.id,
+        columnId: category,
+        taskDetails: response.data.task,
+      });
+      setTimeout(() => {
+        setDrawerVisible(false);
+      }, 0);
     } catch (err) {
       console.error('Unable to create a new task: ', err);
     }
-    window.location.reload();
-    /* TODO: REMOVE THIS RELOAD ON THE TASK ADDITION */
   };
 
   useEffect(() => {
@@ -105,6 +112,27 @@ export default function Board({ board }) {
       socket.off('taskUpdated');
     };
   }, [board.tasks]);
+
+  useEffect(() => {
+    socket.on('taskAdded', (addedTask) => {
+      const { boardId, columnId, taskDetails } = addedTask;
+      if (board.id === boardId) {
+        setTasks((prevTasks) => {
+          const updatedTasks = { ...prevTasks };
+          if (!updatedTasks[columnId]) {
+            updatedTasks[columnId] = [];
+          }
+          updatedTasks[columnId] = [...updatedTasks[columnId], taskDetails];
+          return updatedTasks;
+        });
+      } else {
+        console.warn('Task added to a different board, ignoring.');
+      }
+    });
+    return () => {
+      socket.off('taskAdded');
+    };
+  }, [board.tasks, board.id]);
 
   async function onDragEnd(result) {
     const { source, destination } = result;

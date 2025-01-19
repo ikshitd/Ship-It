@@ -45,6 +45,10 @@ io.on('connection', (socket) => {
     io.emit('taskUpdated', data);
   });
 
+  socket.on('taskAdded', (data) => {
+    io.emit('taskAdded', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -227,6 +231,29 @@ app.post('/update-task', authenticate, async (req, res) => {
     res.status(200).json({ message: 'Task updated succesfully', task: updatedTask });
   } catch (err) {
     res.status(500).json({ error: 'An error occurred while updating the task' });
+  }
+});
+
+app.post('/remove-task', authenticate, async (req, res) => {
+  try {
+    const { boardId, taskId } = req.body;
+    if (!boardId || !taskId) {
+      res.status(500).json({ error: 'Missing required fields' });
+    }
+    const board = await prisma.board.findUnique({ where: { id: boardId }, include: { tasks: true } });
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    const task = board.tasks.find((t) => t.id === taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+    await prisma.task.delete({
+      where: { id: taskId },
+    });
+    res.status(200).json({ message: 'Task deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while deleting the task' });
   }
 });
 
