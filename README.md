@@ -1,8 +1,7 @@
 ## TODO
 
 - ### Frontend & Backend
-  - To complete the task updates and board addition.
-  - To understand how socket.io works and how the real time updates are happening behind the scene.
+  - To add task-remove in real-time feature.
 
 # Getting Started with Create React App
 

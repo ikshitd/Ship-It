@@ -8,7 +8,6 @@ export function AppContextProvider({ children }) {
   const [boards, setBoards] = useState([]);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [isDrawerVisible, setDrawerVisible] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -56,6 +55,25 @@ export function AppContextProvider({ children }) {
     }
   }
 
+  async function removeTask(boardId, taskId) {
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.post(
+        'http://localhost:3001/remove-task',
+        {
+          boardId: boardId,
+          taskId: taskId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (err) {
+      console.error('Unable to update the task', err);
+      throw err;
+    }
+  }
+
   function handleBoardClick(boardId) {
     setSelectedBoardId(boardId);
   }
@@ -64,10 +82,9 @@ export function AppContextProvider({ children }) {
     userId,
     boards,
     selectedBoardId,
-    isDrawerVisible,
     updateTask,
     handleBoardClick,
-    setDrawerVisible,
+    removeTask,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

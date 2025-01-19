@@ -6,7 +6,7 @@ import socket from '../../socket/socket.js';
 import dayjs from 'dayjs';
 
 export default function Task({ board, columnId, taskId, task }) {
-  const { updateTask } = useAppContext();
+  const { updateTask, removeTask } = useAppContext();
 
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -215,8 +215,25 @@ export default function Task({ board, columnId, taskId, task }) {
                 />
               </section>
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                <Button type="primary" onClick={handleSubmit} style={{ width: '50%' }}>
-                  Update
+                <Button type="primary" onClick={handleSubmit} style={{ width: '30%' }}>
+                  Update-Task
+                </Button>
+                <Button
+                  type="primary"
+                  danger
+                  onClick={() => {
+                    removeTask(boardId, taskId);
+                    socket.emit('taskRemoved', {
+                      boardId: boardId,
+                      taskId: taskId,
+                    });
+                    setTimeout(() => {
+                      setDrawerVisible(false);
+                    }, 0);
+                  }}
+                  style={{ marginLeft: '20px', width: '30%', backgroundColor: '#ed3e3e' }}
+                >
+                  Remove-Task
                 </Button>
               </div>
             </div>
