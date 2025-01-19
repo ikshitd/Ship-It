@@ -215,8 +215,19 @@ export default function Task({ board, columnId, taskId, task }) {
                 />
               </section>
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-                <Button type="primary" onClick={handleSubmit} style={{ width: '50%' }}>
+                <Button type="primary" onClick={handleSubmit} style={{ width: '30%' }}>
                   Update
+                </Button>
+                <Button
+                  type="primary"
+                  danger
+                  onClick={() => {
+                    console.log(taskId);
+                    // TODO: ADD THE REMOVE LOGIC HERE
+                  }}
+                  style={{ marginLeft: '20px', width: '30%', backgroundColor: '#ed3e3e' }}
+                >
+                  Remove
                 </Button>
               </div>
             </div>
