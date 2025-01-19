@@ -8,7 +8,7 @@ import socket from '../../socket/socket.js';
 import dayjs from 'dayjs';
 
 export default function Board({ board }) {
-  const { userId } = useAppContext();
+  const { userId, updateTask } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const [tasks, setTasks] = useState({
@@ -87,21 +87,19 @@ export default function Board({ board }) {
 
   useEffect(() => {
     socket.on('taskUpdated', (updatedTask) => {
-      const { taskId, columnId, updatedDetails } = updatedTask;
+      const { taskId, columnId, taskDetails } = updatedTask;
       setTasks((prevTasks) => {
         const updatedTasks = { ...prevTasks };
         if (updatedTasks[columnId]) {
           const taskIndex = updatedTasks[columnId].findIndex((task) => task.id === taskId);
           if (taskIndex !== -1) {
-            updatedTasks[columnId][taskIndex] = { ...updatedTasks[columnId][taskIndex], ...updatedDetails };
+            updatedTasks[columnId][taskIndex] = { ...updatedTasks[columnId][taskIndex], ...taskDetails };
           }
         } else {
           console.error('Invalid columnId:', columnId);
         }
         return updatedTasks;
       });
-      window.location.reload();
-      /* TODO: REMOVE THIS RELOAD ON THE HEADING UPDATE */
     });
     return () => {
       socket.off('taskUpdated');

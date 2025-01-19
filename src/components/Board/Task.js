@@ -44,7 +44,9 @@ export default function Task({ board, columnId, taskId, task }) {
         columnId,
         taskDetails: updatedTaskDetails,
       });
-      setDrawerVisible(false);
+      setTimeout(() => {
+        setDrawerVisible(false);
+      }, 0);
     } catch (err) {
       console.error('Unable to update the task details', err);
     }
