@@ -57,6 +57,10 @@ io.on('connection', (socket) => {
     io.emit('boardAdded', data);
   });
 
+  socket.on('boardSelected', (data) => {
+    io.emit('boardSelected', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });

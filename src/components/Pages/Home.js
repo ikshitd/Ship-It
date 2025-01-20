@@ -8,25 +8,30 @@ import { PlusOutlined } from '@ant-design/icons';
 import socket from '../../socket/socket.js';
 
 export default function Home() {
-  const { boards, userId, addBoard } = useAppContext();
+  const { boards, userId, addBoard, selectedBoardId } = useAppContext();
   const { Sider, Content } = Layout;
   const [currentBoardId, setCurrentBoardId] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (boards.length > 0) {
-      setCurrentBoardId(boards[0]?.id);
-    }
-  }, [boards]);
-
   const handleMenuClick = ({ key }) => {
     setCurrentBoardId(parseInt(key, 10));
+    socket.emit('boardSelected', {
+      boardId: parseInt(key),
+    });
   };
 
   const selectedBoard = boards.find((board) => board.id === currentBoardId);
   const users = [];
+
+  useEffect(() => {
+    if (selectedBoardId === null) {
+      setCurrentBoardId(boards[0]?.id);
+    } else {
+      setCurrentBoardId(selectedBoardId);
+    }
+  }, [selectedBoardId]);
 
   const menuItems = boards.map((board) => ({
     key: board.id.toString(),

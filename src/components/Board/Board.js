@@ -8,21 +8,24 @@ import socket from '../../socket/socket.js';
 import dayjs from 'dayjs';
 
 export default function Board({ board }) {
+  const propagateData = (board) => {
+    return {
+      ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
+
+      ...(Array.isArray(board.tasks) ? board.tasks : []).reduce((acc, task) => {
+        const taskCategory = task.taskCategory;
+        if (DEFAULT_COLUMNS.includes(taskCategory)) {
+          acc[taskCategory] = acc[taskCategory] || [];
+          acc[taskCategory].push(task);
+        }
+        return acc;
+      }, {}),
+    };
+  };
   const { userId } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
-  const [tasks, setTasks] = useState({
-    ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
-
-    ...(Array.isArray(board.tasks) ? board.tasks : []).reduce((acc, task) => {
-      const taskCategory = task.taskCategory;
-      if (DEFAULT_COLUMNS.includes(taskCategory)) {
-        acc[taskCategory] = acc[taskCategory] || [];
-        acc[taskCategory].push(task);
-      }
-      return acc;
-    }, {}),
-  });
+  const [tasks, setTasks] = useState(propagateData(board));
 
   const [category, setCategory] = useState(DEFAULT_COLUMNS.at(0));
   const [isEditing, setIsEditing] = useState(false);
@@ -75,6 +78,15 @@ export default function Board({ board }) {
       console.error('Unable to create a new task: ', err);
     }
   };
+
+  useEffect(() => {
+    socket.on('boardSelected', () => {
+      setTasks(propagateData(board));
+    });
+    return () => {
+      socket.off('boardSelected');
+    };
+  }, [board]);
 
   useEffect(() => {
     socket.on('taskMoved', (updatedTask) => {
