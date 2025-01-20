@@ -92,7 +92,7 @@ export default function Home() {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ position: 'static', minHeight: '100vh' }}>
       <Sider
         width={'15%'}
         style={{

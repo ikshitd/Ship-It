@@ -31,7 +31,10 @@ export default function Login() {
       if (response.status === 200) {
         const { token } = response.data;
         localStorage.setItem('authToken', token);
-        navigate('/', { replace: true });
+        setTimeout(() => {
+          navigate('/', { replace: true });
+          window.location.reload();
+        }, 0);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');

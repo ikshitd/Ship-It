@@ -187,7 +187,7 @@ export default function Board({ board }) {
           willChange: 'transform',
         }}
       >
-        <div className="board-container">
+        <div className="board-container" style={{ height: '900px' }}>
           {DEFAULT_COLUMNS.map((columnId) => (
             <Droppable
               key={columnId}
@@ -197,7 +197,11 @@ export default function Board({ board }) {
               ignoreContainerClipping={true}
             >
               {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="section-container">
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="section-container column"
+                >
                   <div className="task-details">
                     <div className="section-header">
                       <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
