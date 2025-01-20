@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ReactComponent as ArrowRightIcon } from '../../assets/svg/keyboardArrowRightIcon.svg';
 import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
 import axios from 'axios';
+import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +54,9 @@ export default function Login() {
         padding: '20px',
       }}
     >
+      <div style={{ marginBottom: '30px' }}>
+        <ShareIcon fill="#FFC107" width="100px" height="100px" />
+      </div>
       <div
         style={{
           backgroundColor: '#fff',

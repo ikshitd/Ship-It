@@ -1,10 +1,10 @@
-import { Layout, Menu, Divider, List, Avatar, Modal, Input } from 'antd';
+import { Layout, Menu, Divider, List, Avatar, Modal, Input, Typography } from 'antd';
 import { useAppContext } from '../../context/Context.js';
 import { useState, useEffect } from 'react';
 import Board from '../Board/Board.js';
 import { Link } from 'react-router-dom';
 import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons';
 import socket from '../../socket/socket.js';
 
 export default function Home() {
@@ -14,6 +14,8 @@ export default function Home() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const { Title } = Typography;
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -31,6 +33,7 @@ export default function Home() {
   const menuItems = boards.map((board) => ({
     key: board.id.toString(),
     label: board.name,
+    icon: <AppstoreOutlined />,
     onClick: () => handleMenuClick({ key: board.id.toString() }),
   }));
 
@@ -128,68 +131,67 @@ export default function Home() {
   return (
     <Layout style={{ position: 'static', minHeight: '100vh' }}>
       <Sider
-        width={'15%'}
-        style={{
-          background: '#f9f9f9',
-          borderRight: '1px solid #d9d9d9',
-          overflowY: 'auto',
-        }}
+        width="15%"
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+        theme="light"
       >
-        <div style={{ padding: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h3 style={{ display: 'inline', fontWeight: 'bold', margin: '10px' }}> Boards </h3>
-            <PlusOutlined
-              onClick={() => {
-                setIsModalVisible(true);
-              }}
-              style={{
-                cursor: 'pointer',
-                fontSize: '14px',
-                marginTop: '3px',
-              }}
-            />
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <Title level={4} className="!mb-0">
+              {!collapsed && 'Boards'}
+            </Title>
+            {!collapsed && (
+              <PlusOutlined
+                onClick={() => setIsModalVisible(true)}
+                className="text-lg cursor-pointer hover:text-blue-600 transition-colors"
+              />
+            )}
           </div>
+        </div>
+
+        <div className="overflow-y-auto h-[calc(100vh-64px)]">
           {boards.length > 0 ? (
             <Menu
-              mode="vertical"
-              className="custom-menu"
-              defaultSelectedKeys={[boards[0]?.id.toString()]}
+              mode="inline"
+              selectedKeys={[currentBoardId?.toString()]}
               items={menuItems}
-              style={{
-                background: '#f9f9f9',
-                border: 0,
-                fontSize: '16px',
-                fontWeight: '400',
-                margin: '0px',
-              }}
+              className="border-r-0"
             />
           ) : (
-            <p style={{ textAlign: 'center', color: '#888' }}>No boards available.</p>
+            <div className="px-4 text-gray-500 text-center">No boards available.</div>
           )}
-        </div>
-        <Divider style={{ margin: '11px 0' }} />
-        <div style={{ padding: '16px' }}>
-          <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}>Users</h3>
-          {users.length > 0 ? (
-            <List
-              itemLayout="horizontal"
-              dataSource={users}
-              renderItem={(user) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar style={{ backgroundColor: '#87d068' }} size="large">
-                        {user.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                    }
-                    title={user.name}
-                    description={user.email}
+
+          {!collapsed && (
+            <>
+              <Divider className="my-4" />
+              <div className="px-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <TeamOutlined className="text-lg" />
+                  <Title level={5} className="!mb-0">
+                    Team Members
+                  </Title>
+                </div>
+                {users.length > 0 ? (
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={users}
+                    renderItem={(user) => (
+                      <List.Item>
+                        <List.Item.Meta
+                          avatar={<Avatar>{user.name.charAt(0).toUpperCase()}</Avatar>}
+                          title={user.name}
+                          description={user.email}
+                        />
+                      </List.Item>
+                    )}
                   />
-                </List.Item>
-              )}
-            />
-          ) : (
-            <p style={{ textAlign: 'center', color: '#888' }}>No users attached to this board.</p>
+                ) : (
+                  <div className="text-gray-500 text-center text-sm">No team members yet</div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </Sider>
