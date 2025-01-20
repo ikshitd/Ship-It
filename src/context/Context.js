@@ -18,20 +18,20 @@ export function AppContextProvider({ children }) {
     }
   }, []);
 
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`http://localhost:3001/boards?userId=${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setBoards(response.data);
+    } catch (error) {
+      console.error('Error fetching boards:', error);
+    }
+  };
+
   useEffect(() => {
     if (userId) {
-      const fetchData = async () => {
-        try {
-          const token = localStorage.getItem('authToken');
-          const response = await axios.get(`http://localhost:3001/boards?userId=${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setBoards(response.data);
-        } catch (error) {
-          console.error('Error fetching boards:', error);
-        }
-      };
-
       fetchData();
     }
   }, [userId]);
@@ -41,8 +41,16 @@ export function AppContextProvider({ children }) {
       const { boardId, board } = addedBoard;
       setBoards((prevBoards) => [...prevBoards, { id: boardId, ...board }]);
     });
+
+    socket.on('boardSelected', (newSelectedBoard) => {
+      const { boardId } = newSelectedBoard;
+      fetchData();
+      setSelectedBoardId(boardId);
+    });
+
     return () => {
       socket.off('boardAdded');
+      socket.off('boardSelected');
     };
   }, []);
 

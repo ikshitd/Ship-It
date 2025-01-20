@@ -25,6 +25,9 @@ export default function Home() {
 
   const handleMenuClick = ({ key }) => {
     setCurrentBoardId(parseInt(key, 10));
+    socket.emit('boardSelected', {
+      boardId: parseInt(key),
+    });
   };
 
   const selectedBoard = boards.find((board) => board.id === currentBoardId);

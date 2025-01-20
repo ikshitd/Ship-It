@@ -11,19 +11,22 @@ export default function Board({ board }) {
   const { userId } = useAppContext();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
-  const [tasks, setTasks] = useState({
-    ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
+  const propagateData = (board) => {
+    return {
+      ...DEFAULT_COLUMNS.reduce((acc, column) => ({ ...acc, [column]: [] }), {}),
 
-    ...(Array.isArray(board.tasks) ? board.tasks : []).reduce((acc, task) => {
-      const taskCategory = task.taskCategory;
-      if (DEFAULT_COLUMNS.includes(taskCategory)) {
-        acc[taskCategory] = acc[taskCategory] || [];
-        acc[taskCategory].push(task);
-      }
-      return acc;
-    }, {}),
-  });
+      ...(Array.isArray(board.tasks) ? board.tasks : []).reduce((acc, task) => {
+        const taskCategory = task.taskCategory;
+        if (DEFAULT_COLUMNS.includes(taskCategory)) {
+          acc[taskCategory] = acc[taskCategory] || [];
+          acc[taskCategory].push(task);
+        }
+        return acc;
+      }, {}),
+    };
+  };
 
+  const [tasks, setTasks] = useState(propagateData(board));
   const [category, setCategory] = useState(DEFAULT_COLUMNS.at(0));
   const [isEditing, setIsEditing] = useState(false);
   const [isDrawerVisible, setDrawerVisible] = useState(false);
@@ -44,6 +47,15 @@ export default function Board({ board }) {
       [field]: value,
     }));
   };
+
+  useEffect(() => {
+    socket.on('boardSelected', () => {
+      setTasks(propagateData(board));
+    });
+    return () => {
+      socket.off('boardSelected');
+    };
+  }, [board]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
