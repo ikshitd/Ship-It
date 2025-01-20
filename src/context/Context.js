@@ -35,6 +35,48 @@ export function AppContextProvider({ children }) {
     }
   }, [userId]);
 
+  async function addBoard(boardName) {
+    try {
+      console.log('Adding board with name:', boardName);
+      console.log('Current userId:', userId);
+      
+      const token = localStorage.getItem('authToken');
+      console.log('Token exists:', !!token);
+
+      const response = await axios.post(
+        'http://localhost:3001/add-board',
+        {
+          userId,
+          boardName
+        },
+        {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+        }
+      );
+      
+      console.log('Server response:', response);
+
+      if (response.data) {
+        setBoards(prevBoards => [...prevBoards, response.data]);
+        return { success: true, board: response.data };
+      }
+      return { success: false, error: 'Failed to create board' };
+    } catch (error) {
+      console.error('Detailed error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      return { 
+        success: false, 
+        error: error.response?.data?.error || 'Failed to create board'
+      };
+    }
+  }
+
   async function updateTask(boardId, taskId, updatedDetails) {
     try {
       const token = localStorage.getItem('authToken');
@@ -85,7 +127,9 @@ export function AppContextProvider({ children }) {
     updateTask,
     handleBoardClick,
     removeTask,
+    addBoard
   };
+
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
