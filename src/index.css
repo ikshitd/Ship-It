@@ -23,6 +23,7 @@ body {
   background-color: #f2f4f8;
   margin: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 a {
@@ -162,7 +163,7 @@ button {
   left: 0;
   bottom: 0;
   right: 0;
-  height: 85px;
+  height: 80px;
   background-color: #ffffff;
   z-index: 1000;
   display: flex;
@@ -848,8 +849,8 @@ button {
 
 /* Board Styling */
 .board-container {
-  display: flex;
-  /* margin: 50px; */
+  display: block;
+  height: 100vh;
   gap: 1rem;
 }
 
@@ -883,7 +884,6 @@ h3 {
   display: flex;
   padding: 20px;
   height: 100%;
-  /* border: 1px solid #ccc; */
 }
 
 .section-container {
@@ -904,6 +904,7 @@ h3 {
   padding: 15px;
   margin: 10px 0;
   transition: transform 0.2s ease-in-out;
+  height: 163px;
 }
 
 .task-card:hover {
@@ -929,10 +930,8 @@ h3 {
 }
 
 .section-header {
-  /* background-color: rgba(0, 0, 0, 0.11); */
   font-weight: 800;
   color: black;
-  margin-top: -10px;
   margin-left: -10px;
   margin-right: -10px;
   display: flex;
@@ -941,7 +940,13 @@ h3 {
   justify-content: space-between;
   gap: 8px;
   padding: 0 26px;
-  flex-wrap: wrap;
+  flex-wrap: wr;
+  position: sticky;
+  background-color: #fff;
+  padding: 8px;
+  top: -10px;
+  z-index: 1;
+  border-bottom: 1px solid #ddd;
 }
 
 .section-heading {
@@ -952,7 +957,14 @@ h3 {
 }
 
 .custom-menu .ant-menu-item-selected {
-  background-color: #e0f7fa !important; /* Light teal background */
-  color: #00796b !important; /* Teal text color */
-  font-weight: 600 !important; /* Bold font */
+  background-color: #e0f7fa !important;
+  color: #00796b !important;
+  font-weight: 600 !important;
+}
+
+.column {
+  flex: 1;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 93%;
 }
