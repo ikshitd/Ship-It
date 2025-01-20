@@ -1,13 +1,19 @@
-import { Layout, Menu, Divider, List, Avatar } from 'antd';
+import { Layout, Menu, Divider, List, Avatar, Modal, Input } from 'antd';
 import { useAppContext } from '../../context/Context.js';
 import { useState, useEffect } from 'react';
 import Board from '../Board/Board.js';
 import { Link } from 'react-router-dom';
+import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
+import { PlusOutlined } from '@ant-design/icons';
+import socket from '../../socket/socket.js';
 
 export default function Home() {
-  const { boards, userId } = useAppContext();
+  const { boards, userId, addBoard } = useAppContext();
   const { Sider, Content } = Layout;
   const [currentBoardId, setCurrentBoardId] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newBoardName, setNewBoardName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -28,6 +34,31 @@ export default function Home() {
     onClick: () => handleMenuClick({ key: board.id.toString() }),
   }));
 
+  const handleModalOk = async () => {
+    if (newBoardName.trim()) {
+      try {
+        setIsLoading(true);
+        const newBoard = await addBoard(newBoardName.trim());
+        setNewBoardName('');
+        setIsModalVisible(false);
+        socket.emit('boardAdded', {
+          boardId: newBoard.id,
+          userId: userId,
+          board: newBoard,
+        });
+      } catch (err) {
+        console.error('Failed to create board', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleModalCancel = () => {
+    setNewBoardName('');
+    setIsModalVisible(false);
+  };
+
   if (!userId) {
     return (
       <div
@@ -41,6 +72,9 @@ export default function Home() {
           padding: '20px',
         }}
       >
+        <div style={{ marginBottom: '30px' }}>
+          <ShareIcon fill="#FFC107" width="100px" height="100px" />
+        </div>
         <div
           style={{
             backgroundColor: '#fff',
@@ -102,7 +136,19 @@ export default function Home() {
         }}
       >
         <div style={{ padding: '16px' }}>
-          <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}>Boards</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ display: 'inline', fontWeight: 'bold', margin: '10px' }}> Boards </h3>
+            <PlusOutlined
+              onClick={() => {
+                setIsModalVisible(true);
+              }}
+              style={{
+                cursor: 'pointer',
+                fontSize: '14px',
+                marginTop: '3px',
+              }}
+            />
+          </div>
           {boards.length > 0 ? (
             <Menu
               mode="vertical"
@@ -121,7 +167,7 @@ export default function Home() {
             <p style={{ textAlign: 'center', color: '#888' }}>No boards available.</p>
           )}
         </div>
-        <Divider style={{ margin: '12px 0' }} />
+        <Divider style={{ margin: '11px 0' }} />
         <div style={{ padding: '16px' }}>
           <h3 style={{ fontWeight: 'bold', marginBottom: '12px' }}>Users</h3>
           {users.length > 0 ? (
@@ -147,6 +193,23 @@ export default function Home() {
           )}
         </div>
       </Sider>
+      <Modal
+        title="Add New Board"
+        open={isModalVisible}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+        okButtonProps={{ disabled: !newBoardName.trim() || isLoading }}
+        confirmLoading={isLoading}
+      >
+        <Input
+          placeholder="Enter board name"
+          value={newBoardName}
+          onChange={(e) => setNewBoardName(e.target.value)}
+          onPressEnter={() => {
+            if (newBoardName.trim() && !isLoading) handleModalOk();
+          }}
+        />
+      </Modal>
       <Layout>
         <Content style={{ background: '#fff', borderRadius: '8px' }}>
           {selectedBoard ? (

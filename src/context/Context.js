@@ -1,6 +1,7 @@
 import React, { useState, useContext, createContext, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import socket from '../socket/socket.js';
 
 const AppContext = createContext();
 
@@ -34,6 +35,16 @@ export function AppContextProvider({ children }) {
       fetchData();
     }
   }, [userId]);
+
+  useEffect(() => {
+    socket.on('boardAdded', (addedBoard) => {
+      const { boardId, board } = addedBoard;
+      setBoards((prevBoards) => [...prevBoards, { id: boardId, ...board }]);
+    });
+    return () => {
+      socket.off('boardAdded');
+    };
+  }, []);
 
   async function updateTask(boardId, taskId, updatedDetails) {
     try {
@@ -74,6 +85,26 @@ export function AppContextProvider({ children }) {
     }
   }
 
+  async function addBoard(boardName) {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.post(
+        'http://localhost:3001/add-board',
+        {
+          userId: userId,
+          boardName: boardName,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data.board;
+    } catch (err) {
+      console.error('Unable to add the board', err);
+      throw err;
+    }
+  }
+
   function handleBoardClick(boardId) {
     setSelectedBoardId(boardId);
   }
@@ -85,6 +116,7 @@ export function AppContextProvider({ children }) {
     updateTask,
     handleBoardClick,
     removeTask,
+    addBoard,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

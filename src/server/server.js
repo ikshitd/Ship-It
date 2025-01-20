@@ -53,6 +53,10 @@ io.on('connection', (socket) => {
     io.emit('taskRemoved', data);
   });
 
+  socket.on('boardAdded', (data) => {
+    io.emit('boardAdded', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -149,7 +153,7 @@ app.post('/add-board', authenticate, async (req, res) => {
         tasks: {},
       },
     });
-    res.status(200).json(newBoard);
+    res.status(200).json({ message: 'Board added successfully', board: newBoard });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create board' });
   }
