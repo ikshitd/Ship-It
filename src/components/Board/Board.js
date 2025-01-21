@@ -26,11 +26,7 @@ export default function Board({ board }) {
     };
   };
 
-  const [tasks, setTasks] = useState(propagateData(board));
-  const [category, setCategory] = useState(DEFAULT_COLUMNS.at(0));
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDrawerVisible, setDrawerVisible] = useState(false);
-  const [updatedTaskDetails, setUpdatedTaskDetails] = useState({
+  const defaultTaskDetails = {
     heading: 'Rufus',
     startDate: null,
     dueDate: null,
@@ -38,7 +34,13 @@ export default function Board({ board }) {
     status: 'Off_Risk',
     description: '',
     taskCategory: 'NOT_STARTED',
-  });
+  };
+
+  const [tasks, setTasks] = useState(propagateData(board));
+  const [category, setCategory] = useState(DEFAULT_COLUMNS.at(0));
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDrawerVisible, setDrawerVisible] = useState(false);
+  const [updatedTaskDetails, setUpdatedTaskDetails] = useState(defaultTaskDetails);
   const { Option } = Select;
 
   const handleInputChange = (field, value) => {
@@ -74,6 +76,7 @@ export default function Board({ board }) {
           },
         }
       );
+      setUpdatedTaskDetails(defaultTaskDetails);
       socket.emit('taskAdded', {
         userId: userId,
         boardId: board.id,
