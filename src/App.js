@@ -4,6 +4,7 @@ import Register from './components/Pages/Register.js';
 import Home from './components/Pages/Home.js';
 import Navbar from './components/Bar/Navbar.js';
 import { AppContextProvider } from '../src/context/Context.js';
+import NotFound from './components/Pages/NotFound.js';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
           <Route path="/" element={<Home />}></Route>
           <Route path="/login" element={<Login />}></Route>
           <Route path="/register" element={<Register />}></Route>
+          <Route path="/*" element={<NotFound />} />
         </Routes>
         <Navbar />
       </Router>
