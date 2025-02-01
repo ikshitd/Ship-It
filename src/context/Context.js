@@ -2,6 +2,7 @@ import React, { useState, useContext, createContext, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import socket from '../socket/socket.js';
+import { useNavigate } from 'react-router-dom';
 
 const AppContext = createContext();
 
@@ -9,6 +10,7 @@ export function AppContextProvider({ children }) {
   const [boards, setBoards] = useState([]);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   const [userId, setUserId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -19,13 +21,16 @@ export function AppContextProvider({ children }) {
   }, []);
 
   const fetchData = async () => {
+    const token = localStorage.getItem('authToken');
     try {
-      const token = localStorage.getItem('authToken');
       const response = await axios.get(`http://localhost:3001/boards?userId=${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBoards(response.data);
     } catch (error) {
+      if (token && error.status === 403) {
+        navigate('/session-expired');
+      }
       console.error('Error fetching boards:', error);
     }
   };
