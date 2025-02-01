@@ -306,7 +306,6 @@ app.post('/add-user', authenticate, async (req, res) => {
 app.get('/get-users', authenticate, async (req, res) => {
   try {
     const boardId = parseInt(req.query.boardId);
-    console.log('boardId: here: ', boardId);
     const boardUsers = await prisma.board.findUnique({
       where: { id: boardId },
       include: { users: true },
