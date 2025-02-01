@@ -12,14 +12,14 @@ model User {
   name      String
   email     String  @unique
   password  String
-  boards    Board[] 
+  boards    Board[] @relation("UserBoards")
 }
 
 model Board {
   id        Int     @id @default(autoincrement())
   name      String
   userId    Int     
-  user      User    @relation(fields: [userId], references: [id])
+  users      User[]   @relation("UserBoards")
   tasks     Task[]  
 }
 

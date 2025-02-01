@@ -155,6 +155,9 @@ app.post('/add-board', authenticate, async (req, res) => {
         name: boardName,
         userId: userId,
         tasks: {},
+        users: {
+          connect: { id: userId },
+        },
       },
     });
     res.status(200).json({ message: 'Board added successfully', board: newBoard });
@@ -269,6 +272,48 @@ app.post('/remove-task', authenticate, async (req, res) => {
     res.status(200).json({ message: 'Task deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'An error occurred while deleting the task' });
+  }
+});
+
+app.post('/add-user', authenticate, async (req, res) => {
+  try {
+    const { boardId, userId } = req.body;
+    if (!boardId || !userId) {
+      return res.status(500).json({ error: 'Missing required fields' });
+    }
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const updatedBoard = await prisma.board.update({
+      where: { id: boardId },
+      data: {
+        users: {
+          connect: { id: userId },
+        },
+      },
+    });
+    return res.status(200).json({ message: 'Task deleted successfully', updatedBoard: updatedBoard });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occured while adding the user to the board ' });
+  }
+});
+
+app.get('/get-users', authenticate, async (req, res) => {
+  try {
+    const boardId = parseInt(req.query.boardId);
+    console.log('boardId: here: ', boardId);
+    const boardUsers = await prisma.board.findUnique({
+      where: { id: boardId },
+      include: { users: true },
+    });
+    return res.status(200).json({ boardUsers: boardUsers });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occured while fetching board-users. ' });
   }
 });
 

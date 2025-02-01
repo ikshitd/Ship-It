@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
 import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons';
 import socket from '../../socket/socket.js';
+import axios from 'axios';
 
 export default function Home() {
   const { boards, userId, addBoard } = useAppContext();
@@ -15,6 +16,7 @@ export default function Home() {
   const [newBoardName, setNewBoardName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [users, setUsers] = useState([]);
   const { Title } = Typography;
 
   useEffect(() => {
@@ -22,6 +24,28 @@ export default function Home() {
       setCurrentBoardId(boards[0]?.id);
     }
   }, [boards]);
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`http://localhost:3001/get-users?boardId=${currentBoardId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data.boardUsers.users;
+    } catch (err) {
+      console.error('Error fetching the users for the boards:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentBoardId) {
+      const getUsers = async () => {
+        const usersResponse = await fetchUsers();
+        setUsers(usersResponse);
+      };
+      getUsers();
+    }
+  }, [currentBoardId]);
 
   const handleMenuClick = ({ key }) => {
     setCurrentBoardId(parseInt(key, 10));
@@ -31,7 +55,6 @@ export default function Home() {
   };
 
   const selectedBoard = boards.find((board) => board.id === currentBoardId);
-  const users = [];
 
   const menuItems = boards.map((board) => ({
     key: board.id.toString(),
