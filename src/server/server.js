@@ -85,9 +85,15 @@ function authenticate(req, res, next) {
   }
 }
 
+/* TODO: ONLY FOR TESTING PURPOSES, REMOVE THEM ONCE EVERYTHING IS DONE */
 app.get('/users', async (req, res) => {
   const users = await prisma.user.findMany();
   res.json(users);
+});
+
+app.get('/all-boards', async (req, res) => {
+  const boards = await prisma.board.findMany();
+  res.json(boards);
 });
 
 app.get('/tasks', authenticate, async (req, res) => {
@@ -132,15 +138,24 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/boards', authenticate, async (req, res) => {
+  const userId = parseInt(req.query.userId);
   try {
-    const userId = parseInt(req.query.userId);
     const boards = await prisma.board.findMany({
-      where: { userId: userId },
-      include: { tasks: true },
+      where: {
+        users: {
+          some: {
+            id: userId,
+          },
+        },
+      },
+      include: {
+        tasks: true,
+        users: true,
+      },
     });
     res.json(boards);
   } catch (err) {
-    res.status(500).json({ error: `Error fetching boards for userId: ${req.userId}` });
+    res.status(500).json({ error: `Error fetching boards for userId: ${userId}` });
   }
 });
 
@@ -172,7 +187,7 @@ app.post('/add-task', authenticate, async (req, res) => {
     if (!userId || !boardId || !columnId || !taskDetails) {
       res.status(500).json({ error: 'Missing required fields' });
     }
-    const board = await prisma.board.findFirst({ where: { id: boardId, userId: userId } });
+    const board = await prisma.board.findFirst({ where: { id: boardId } });
     if (!board) {
       return res
         .status(404)

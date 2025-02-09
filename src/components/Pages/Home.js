@@ -27,7 +27,7 @@ export default function Home() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = sessionStorage.getItem('authToken');
       const response = await axios.get(`http://localhost:3001/get-users?boardId=${currentBoardId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -157,7 +157,7 @@ export default function Home() {
   return (
     <Layout style={{ position: 'static', minHeight: '100vh' }}>
       <Sider
-        width="15%"
+        width="10%"
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}

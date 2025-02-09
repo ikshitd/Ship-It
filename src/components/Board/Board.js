@@ -72,7 +72,7 @@ export default function Board({ board }) {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
           },
         }
       );

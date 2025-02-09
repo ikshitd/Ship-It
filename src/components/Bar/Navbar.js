@@ -24,7 +24,7 @@ export default function Footer() {
             <LogoutIcon
               onClick={() => {
                 setTimeout(() => {
-                  localStorage.clear();
+                  sessionStorage.clear();
                   window.location.reload();
                 }, 0);
               }}

@@ -13,7 +13,7 @@ export function AppContextProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     if (token) {
       const decoded = jwtDecode(token);
       setUserId(decoded.userId);
@@ -21,7 +21,7 @@ export function AppContextProvider({ children }) {
   }, []);
 
   const fetchData = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = sessionStorage.getItem('authToken');
     try {
       const response = await axios.get(`http://localhost:3001/boards?userId=${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -61,7 +61,7 @@ export function AppContextProvider({ children }) {
 
   async function updateTask(boardId, taskId, updatedDetails) {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = sessionStorage.getItem('authToken');
       await axios.post(
         'http://localhost:3001/update-task',
         {
@@ -81,7 +81,7 @@ export function AppContextProvider({ children }) {
 
   async function removeTask(boardId, taskId) {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = sessionStorage.getItem('authToken');
       await axios.post(
         'http://localhost:3001/remove-task',
         {
@@ -100,7 +100,7 @@ export function AppContextProvider({ children }) {
 
   async function addBoard(boardName) {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = sessionStorage.getItem('authToken');
       const response = await axios.post(
         'http://localhost:3001/add-board',
         {
