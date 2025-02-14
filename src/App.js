@@ -6,6 +6,7 @@ import Navbar from './components/Bar/Navbar.js';
 import { AppContextProvider } from '../src/context/Context.js';
 import NotFound from './components/Pages/NotFound.js';
 import SessionExpired from './components/Pages/SessionExpired.js';
+import Profile from './components/Pages/Profile.js';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/login" element={<Login />}></Route>
         <Route path="/register" element={<Register />}></Route>
         <Route path="/session-expired" element={<SessionExpired />}></Route>
+        <Route path="/profile" element={<Profile />}></Route>
         <Route path="/*" element={<NotFound />} />
       </Routes>
       <Navbar />

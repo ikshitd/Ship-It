@@ -60,18 +60,15 @@ export default function Task({ board, columnId, taskId, task }) {
       className="task-card"
     >
       <div className="task-heading">
-        <p style={{ fontSize: '16px' }}> {task.heading} </p>
+        <p style={{ fontSize: '15px' }}> {task.heading} </p>
       </div>
       <div className="task-details">
         {task.assigneeId != null ? (
-          <div style={{ fontSize: '16px', marginTop: '10  px', marginBottom: '10px' }}>
-            {' '}
-            Assignee: {task.assigneeId}{' '}
-          </div>
+          <div style={{ marginTop: '5px', marginBottom: '5px' }}> Assignee: {task.assigneeId} </div>
         ) : null}
         <div>
           {task.startDate != null && task.dueDate != null ? (
-            <div style={{ fontSize: '16px', marginTop: '10px', marginBottom: '10px' }}>
+            <div style={{ fontSize: '15px', marginTop: '3px', marginBottom: '10px' }}>
               {startDate} {startMonth}- {endDate} {endMonth}{' '}
             </div>
           ) : null}
@@ -79,26 +76,26 @@ export default function Task({ board, columnId, taskId, task }) {
         {task.priority != null ? (
           <Tag
             style={{
-              fontSize: '16px',
+              fontFamily: 'Monaco',
+              fontSize: '13px',
               justifyContent: 'center',
               textAlign: 'center',
-              height: '30px',
-              width: '80px',
-              marginTop: '15px',
+              height: '25px',
+              width: '63px',
             }}
-            color={task.priority === 'High' ? '#ed3e3e' : task.priority === 'Medium' ? '#fc7819' : '#03ad2b'}
+            color={task.priority === 'High' ? '#ed3e3e' : task.priority === 'Medium' ? '#f7cb2d' : '#57bd5c'}
           >
-            <div style={{ marginTop: '3px' }}>{task.priority}</div>
+            <div style={{ marginTop: '1px' }}>{task.priority}</div>
           </Tag>
         ) : null}
         {task.status != null ? (
           <Tag
             style={{
-              fontSize: '16px',
+              fontSize: '13px',
               justifyContent: 'center',
               textAlign: 'center',
-              height: '30px',
-              width: '80px',
+              height: '25px',
+              width: '63px',
               marginTop: '10px',
               marginBottom: '10px',
             }}
@@ -110,7 +107,7 @@ export default function Task({ board, columnId, taskId, task }) {
                   : '#171511'
             }
           >
-            <div style={{ marginTop: '3px' }}>{task.status.replace('_', ' ')}</div>
+            <div style={{}}>{task.status.replace('_', ' ')}</div>
           </Tag>
         ) : null}
         <Drawer
@@ -120,7 +117,7 @@ export default function Task({ board, columnId, taskId, task }) {
           onClose={() => {
             setDrawerVisible(false);
           }}
-          closable={false}
+          closable={true}
           open={isDrawerVisible}
           width="50%"
           motion={{

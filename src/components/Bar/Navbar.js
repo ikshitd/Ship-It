@@ -1,8 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ReactComponent as ExploreIcon } from '../../assets/svg/exploreIcon.svg';
 import { ReactComponent as LogoutIcon } from '../../assets/svg/logoutIcon.svg';
+import { ReactComponent as PersonOutLineIcon } from '../../assets/svg/personOutlineIcon.svg';
+import { Tooltip } from 'antd';
+import { useAppContext } from '../../context/Context.js';
 
 export default function Footer() {
+  const { userId } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,22 +20,65 @@ export default function Footer() {
       <nav className="navbarNav">
         <ul className="navbarListItems">
           <li className="navbarListItem" onClick={() => navigate('/')}>
-            <ExploreIcon fill={pathMatchRoute('/') ? '#2c2c2c' : '#8f8f8f'} width="36px" height="36px" />
-            <p className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}>Home</p>
-          </li>
-          <li className="navbarListItem" onClick={() => navigate('/')}>
-            <LogoutIcon
-              onClick={() => {
-                setTimeout(() => {
-                  sessionStorage.clear();
-                  window.location.reload();
-                }, 0);
+            <p
+              style={{
+                color: 'white',
+                fontSize: '110%',
+                fontFamily: 'Concert One',
+                letterSpacing: '0.1em',
+                position: 'absolute',
+                left: '7%',
+                bottom: '1%',
               }}
-              fill={pathMatchRoute('/') ? '#2c2c2c' : '#8f8f8f'}
-              width="36px"
-              height="36px"
-            />
-            <p className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}>Logout</p>
+              className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}
+            >
+              {' '}
+              <span style={{ fontSize: '120%' }}> ORBIT </span> to KEEP YOUR TASKS IN MOTION
+            </p>
+          </li>
+          <li
+            style={{ position: 'absolute', right: '0%', bottom: '20%' }}
+            className="navbarListItem"
+            onClick={() => navigate('/')}
+          >
+            <Tooltip title="Logout" placement="bottom">
+              <LogoutIcon
+                onClick={() => {
+                  setTimeout(() => {
+                    sessionStorage.clear();
+                    window.location.reload();
+                  }, 0);
+                }}
+                fill="white"
+                width="10%"
+                height="10%"
+              />
+            </Tooltip>
+          </li>
+          <li
+            style={{ position: 'absolute', right: '9%', bottom: '20%' }}
+            className="navbarListItem"
+            onClick={() => navigate('/')}
+          >
+            <Tooltip
+              title={!userId ? 'No User Logged In! Register or Sign in to the user profile.' : 'Profile'}
+              placement="bottom"
+            >
+              <PersonOutLineIcon
+                onClick={() => {
+                  setTimeout(() => {
+                    sessionStorage.clear();
+                    if (userId) {
+                      navigate('/profile');
+                      window.location.reload();
+                    }
+                  }, 0);
+                }}
+                fill="white"
+                width="10%"
+                height="10%"
+              />
+            </Tooltip>
           </li>
         </ul>
       </nav>

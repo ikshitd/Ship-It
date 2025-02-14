@@ -202,23 +202,27 @@ export default function Board({ board }) {
           willChange: 'transform',
         }}
       >
-        <div className="board-container" style={{ height: '900px' }}>
+        <div className="board-container">
           {DEFAULT_COLUMNS.map((columnId) => (
             <Droppable
               key={columnId}
               droppableId={columnId}
               isDropDisabled={false}
               isCombineEnabled={false}
-              ignoreContainerClipping={true}
+              ignoreContainerClipping={false}
             >
               {(provided) => (
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   className="section-container column"
+                  style={{ position: 'relative' }}
                 >
                   <div className="task-details">
-                    <div className="section-header">
+                    <div
+                      className="section-header"
+                      style={{ position: 'sticky', top: '0', backgroundColor: '#fff', zIndex: '2' }}
+                    >
                       <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
                       <Button
                         style={{ fontSize: '13px' }}
@@ -229,25 +233,36 @@ export default function Board({ board }) {
                         Add Task
                       </Button>
                     </div>
-                    {tasks[columnId].map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                          >
-                            <Task
-                              board={board}
-                              columnId={columnId}
-                              taskId={task.id}
-                              key={task.id}
-                              task={task}
-                            ></Task>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
+                    <div style={{ minHeight: '100px' }}>
+                      {tasks[columnId].map((task, index) => {
+                        const isDone = task.taskCategory === 'DONE';
+                        return (
+                          <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                style={{
+                                  ...provided.draggableProps.style,
+                                  opacity: isDone ? 0.7 : 1,
+                                  backgroundColor: isDone ? '#f0f0f0' : '',
+                                  marginBottom: '8px', // Add margin between tasks
+                                }}
+                              >
+                                <Task
+                                  board={board}
+                                  columnId={columnId}
+                                  taskId={task.id}
+                                  key={task.id}
+                                  task={task}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+                    </div>
                     {provided.placeholder}
                   </div>
                 </div>
@@ -263,7 +278,7 @@ export default function Board({ board }) {
         onClose={() => {
           setDrawerVisible(false);
         }}
-        closable={false}
+        closable={true}
         open={isDrawerVisible}
         width="50%"
         motion={{

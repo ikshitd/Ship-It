@@ -4,6 +4,7 @@ import { ReactComponent as ArrowRightIcon } from '../../assets/svg/keyboardArrow
 import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
 import axios from 'axios';
 import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -148,6 +149,25 @@ export default function Login() {
             >
               <ArrowRightIcon fill="#ffffff" width="24px" height="24px" />
             </button>
+            {/* working... */}
+            <GoogleLogin
+              onSuccess={async (response) => {
+                const userAccessToken = response.credential;
+                const apiResponse = await axios.get(
+                  `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${userAccessToken}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${userAccessToken}`,
+                      Accept: 'application/json',
+                    },
+                  }
+                );
+                console.log(apiResponse.data);
+              }}
+              onError={(response) => {
+                console.log('ERROR RESPONSE: ', response);
+              }}
+            />
           </div>
         </form>
         {error && (
