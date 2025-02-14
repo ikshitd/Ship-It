@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ReactComponent as LogoutIcon } from '../../assets/svg/logoutIcon.svg';
 import { ReactComponent as PersonOutLineIcon } from '../../assets/svg/personOutlineIcon.svg';
+import { ReactComponent as OrbitIcon } from '../../assets/svg/orbit.svg';
 import { Tooltip } from 'antd';
 import { useAppContext } from '../../context/Context.js';
 
@@ -20,6 +21,15 @@ export default function Footer() {
       <nav className="navbarNav">
         <ul className="navbarListItems">
           <li className="navbarListItem" onClick={() => navigate('/')}>
+            <p>
+              {' '}
+              <OrbitIcon
+                style={{ position: 'absolute', left: '2%', bottom: '6%' }}
+                height="40px"
+                width="40px"
+                fill="white"
+              />
+            </p>
             <p
               style={{
                 color: 'white',
@@ -27,8 +37,9 @@ export default function Footer() {
                 fontFamily: 'Concert One',
                 letterSpacing: '0.1em',
                 position: 'absolute',
-                left: '7%',
-                bottom: '1%',
+                left: '6%',
+                bottom: '%',
+                top: '15%',
               }}
               className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}
             >

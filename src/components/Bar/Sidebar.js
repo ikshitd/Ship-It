@@ -48,7 +48,7 @@ export default function Sidebar({
       >
         <div>
           <div style={{ color: '' }} className="flex items-center justify-between mb-4">
-            <Title style={{ color: 'black' }} level={4}>
+            <Title style={{ fontFamily: 'consolas', color: 'black' }} level={5}>
               {'Boards'}
             </Title>
             {
@@ -85,7 +85,7 @@ export default function Sidebar({
               <div className="px-4">
                 <div className="flex items-center gap-2 mb-4">
                   <TeamOutlined style={{ color: 'black' }} className="text-lg" />
-                  <Title style={{ color: 'black' }} level={4}>
+                  <Title style={{ fontFamily: 'consolas', color: 'black' }} level={5}>
                     Team Members
                   </Title>
                 </div>
