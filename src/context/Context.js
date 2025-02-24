@@ -118,6 +118,34 @@ export function AppContextProvider({ children }) {
     }
   }
 
+  async function addUser(boardId, newUser) {
+    try {
+      const token = sessionStorage.getItem('authToken');
+      const { userId, userName } = newUser;
+      const fetchUrl = `http://localhost:3001/get-user?userId=${userId}&username=${userName}`;
+      const user = await axios.get(fetchUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!user) {
+        throw new Error('Error fetching the user you are trying to add to the board');
+      }
+      const response = await axios.post(
+        `http://localhost:3001/add-user`,
+        {
+          boardId: boardId,
+          userId: userId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.data.board;
+    } catch (err) {
+      console.error('Unable to add the User', err);
+      throw err;
+    }
+  }
+
   function handleBoardClick(boardId) {
     setSelectedBoardId(boardId);
   }
@@ -130,6 +158,7 @@ export function AppContextProvider({ children }) {
     handleBoardClick,
     removeTask,
     addBoard,
+    addUser,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

@@ -11,6 +11,7 @@
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
     "add": "^2.0.6",
+    "amqplib": "^0.10.5",
     "antd": "^5.23.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
@@ -38,11 +39,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "devfrontend": "yarn start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "clean": "rimraf build",
-    "run-server": "cd src/server && nodemon server.js",
+    "devbackend": "cd src/server && nodemon server.js",
     "dev": "concurrently \"yarn start\" \"yarn run-server\""
   },
   "eslintConfig": {

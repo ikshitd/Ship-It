@@ -9,13 +9,15 @@ import axios from 'axios';
 import Sidebar from '../Bar/Sidebar.js';
 
 export default function Home() {
-  const { boards, userId, addBoard } = useAppContext();
+  const { boards, userId, addBoard, addUser } = useAppContext();
   const { Content } = Layout;
   const [currentBoardId, setCurrentBoardId] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddBoardModalVisible, setisAddBoardModalVisible] = useState(false);
+  const [isAddUserModalVisible, setisAddUserModalVisible] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState(null);
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -47,13 +49,13 @@ export default function Home() {
 
   const selectedBoard = boards.find((board) => board.id === currentBoardId);
 
-  const handleModalOk = async () => {
+  const handleAddBoardModalOk = async () => {
     if (newBoardName.trim()) {
       try {
         setIsLoading(true);
         const newBoard = await addBoard(newBoardName.trim());
         setNewBoardName('');
-        setIsModalVisible(false);
+        setisAddBoardModalVisible(false);
         socket.emit('boardAdded', {
           boardId: newBoard.id,
           userId: userId,
@@ -67,9 +69,32 @@ export default function Home() {
     }
   };
 
-  const handleModalCancel = () => {
+  const handleAddUserModalOk = async () => {
+    setNewUser({
+      userName: 'ikshit',
+      userId: 10,
+    });
+    if (newUser != null) {
+      try {
+        console.log('adding the user on the board');
+        await addUser(currentBoardId, newUser);
+        console.log('Added the user on the board');
+      } catch (err) {
+        console.error('Failed to add user to the board', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleAddBoardModalCancel = () => {
     setNewBoardName('');
-    setIsModalVisible(false);
+    setisAddBoardModalVisible(false);
+  };
+
+  const handleAddUserModalCancel = () => {
+    setNewUser('');
+    setisAddUserModalVisible(false);
   };
 
   if (!userId) {
@@ -143,15 +168,19 @@ export default function Home() {
       <Sidebar
         boards={boards}
         currentBoardId={currentBoardId}
-        setIsModalVisible={setIsModalVisible}
+        setisAddBoardModalVisible={setisAddBoardModalVisible}
         users={users}
         newBoardName={newBoardName}
-        handleModalOk={handleModalOk}
-        isModalVisible={isModalVisible}
-        handleModalCancel={handleModalCancel}
+        handleAddBoardModalOk={handleAddBoardModalOk}
+        isAddBoardModalVisible={isAddBoardModalVisible}
+        handleAddBoardModalCancel={handleAddBoardModalCancel}
         setNewBoardName={setNewBoardName}
         isLoading={isLoading}
         setCurrentBoardId={setCurrentBoardId}
+        isAddUserModalVisible={isAddUserModalVisible}
+        setisAddUserModalVisible={setisAddUserModalVisible}
+        handleAddUserModalCancel={handleAddUserModalCancel}
+        handleAddUserModalOk={handleAddUserModalOk}
       />
       <Layout>
         <Content style={{ background: '#fff', borderRadius: '8px' }}>

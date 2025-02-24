@@ -44,7 +44,7 @@ export default function Footer() {
               className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}
             >
               {' '}
-              <span style={{ fontSize: '120%' }}> ORBIT </span> to KEEP YOUR TASKS IN MOTION
+              <span style={{ fontSize: '120%' }}> ORBIT </span> to KEEP DEV IN MOTION
             </p>
           </li>
           <li

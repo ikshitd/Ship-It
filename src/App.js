@@ -7,6 +7,7 @@ import { AppContextProvider } from '../src/context/Context.js';
 import NotFound from './components/Pages/NotFound.js';
 import SessionExpired from './components/Pages/SessionExpired.js';
 import Profile from './components/Pages/Profile.js';
+import UserSearch from './components/UserSearch.js';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/register" element={<Register />}></Route>
         <Route path="/session-expired" element={<SessionExpired />}></Route>
         <Route path="/profile" element={<Profile />}></Route>
+        <Route path="/test" element={<UserSearch />}></Route>
         <Route path="/*" element={<NotFound />} />
       </Routes>
       <Navbar />

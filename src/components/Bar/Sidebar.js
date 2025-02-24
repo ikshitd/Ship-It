@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Layout, Menu, Modal, Input, Divider, List, Avatar, Typography } from 'antd';
 import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons';
 import socket from '../../socket/socket.js';
@@ -6,18 +5,21 @@ import socket from '../../socket/socket.js';
 export default function Sidebar({
   boards,
   currentBoardId,
-  setIsModalVisible,
+  setisAddBoardModalVisible,
   users,
   newBoardName,
-  handleModalOk,
-  isModalVisible,
-  handleModalCancel,
+  handleAddBoardModalOk,
+  isAddBoardModalVisible,
+  handleAddBoardModalCancel,
   setNewBoardName,
   isLoading,
   setCurrentBoardId,
+  isAddUserModalVisible,
+  setisAddUserModalVisible,
+  handleAddUserModalCancel,
+  handleAddUserModalOk,
 }) {
   const { Sider } = Layout;
-  const { Title } = Typography;
 
   const menuItems = boards.map((board) => ({
     key: board.id.toString(),
@@ -41,81 +43,96 @@ export default function Sidebar({
         style={{
           color: 'black',
           backgroundColor: '#ccdcff',
-          border: 'solid',
           borderTop: 'none',
           borderColor: 'black',
         }}
       >
         <div>
-          <div style={{ color: '' }} className="flex items-center justify-between mb-4">
-            <Title style={{ fontFamily: 'consolas', color: 'black' }} level={5}>
+          <div style={{ justifyContent: 'space-between' }} className="flex items-center justify-between mb-4">
+            <p
+              style={{
+                fontFamily: 'consolas',
+                color: 'black',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginLeft: '10%',
+              }}
+            >
               {'Boards'}
-            </Title>
-            {
-              <PlusOutlined
-                onClick={() => setIsModalVisible(true)}
-                className="text-lg cursor-pointer hover:text-blue-600 transition-colors"
-              />
-            }
+            </p>
+            <PlusOutlined onClick={() => setisAddBoardModalVisible(true)} style={{ marginRight: '10%' }} />
           </div>
         </div>
-
-        <div
-          style={{ border: 'solid', borderColor: 'black', borderRight: 'none', borderLeft: 'none' }}
-          className="overflow-y-auto h-[calc(100vh-64px)]"
-        >
-          {boards.length > 0 ? (
-            <Menu
-              theme="jksjdkf"
-              mode="inline"
-              selectedKeys={[currentBoardId?.toString()]}
-              items={menuItems}
-              className="border-r-0"
-              style={{
-                color: 'black',
-              }}
-            />
-          ) : (
-            <div className="px-4 text-gray-500 text-center">No boards available.</div>
-          )}
-
-          {
-            <>
-              <Divider className="my-4" />
-              <div className="px-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <TeamOutlined style={{ color: 'black' }} className="text-lg" />
-                  <Title style={{ fontFamily: 'consolas', color: 'black' }} level={5}>
-                    Team Members
-                  </Title>
-                </div>
-                {users.length > 0 ? (
-                  <List
-                    // itemLayout="horizontal"
-                    dataSource={users}
-                    style={{ color: 'black' }}
-                    renderItem={(user) => (
-                      <List.Item>
-                        <List.Item.Meta
-                          avatar={<Avatar>{user.name.charAt(0).toUpperCase()}</Avatar>}
-                          title={user.name}
-                        />
-                      </List.Item>
-                    )}
-                  />
-                ) : (
-                  <div className="text-gray-500 text-center text-sm">No team members yet</div>
-                )}
+        {boards.length > 0 ? (
+          <Menu
+            theme="light"
+            mode="vertical"
+            selectedKeys={[currentBoardId?.toString()]}
+            items={menuItems}
+            style={{
+              backgroundColor: '#ccdcff',
+            }}
+          />
+        ) : (
+          <div className="px-4 text-gray-500 text-center">No boards available.</div>
+        )}
+        {
+          <>
+            <Divider />
+            <div>
+              <div style={{ justifyContent: 'space-between', display: 'flex' }}>
+                <p
+                  style={{
+                    fontSize: '16px',
+                    fontFamily: 'consolas',
+                    color: 'black',
+                    fontWeight: 'bold',
+                    marginLeft: '10%',
+                  }}
+                  level={5}
+                >
+                  Team Members
+                </p>
+                <TeamOutlined
+                  onClick={() => {
+                    setisAddUserModalVisible(true);
+                  }}
+                  style={{ color: 'black', marginRight: '10%' }}
+                />
               </div>
-            </>
-          }
-        </div>
+              {users.length > 0 ? (
+                <List
+                  dataSource={users}
+                  style={{ color: 'black' }}
+                  renderItem={(user) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<Avatar>{user.name.charAt(0).toUpperCase()}</Avatar>}
+                        title={user.name}
+                      />
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <div className="text-gray-500 text-center text-sm">No team members yet</div>
+              )}
+            </div>
+          </>
+        }
       </Sider>
       <Modal
+        open={isAddUserModalVisible}
+        onOk={handleAddUserModalOk}
+        onCancel={handleAddUserModalCancel}
+        title="Add new Team member on the board"
+      >
+        {' '}
+      </Modal>
+      <Modal
         title="Add New Board"
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
+        open={isAddBoardModalVisible}
+        onOk={handleAddBoardModalOk}
+        onCancel={handleAddBoardModalCancel}
         okButtonProps={{ disabled: !newBoardName.trim() || isLoading }}
         confirmLoading={isLoading}
       >
@@ -124,7 +141,7 @@ export default function Sidebar({
           value={newBoardName}
           onChange={(e) => setNewBoardName(e.target.value)}
           onPressEnter={() => {
-            if (newBoardName.trim() && !isLoading) handleModalOk();
+            if (newBoardName.trim() && !isLoading) handleAddBoardModalOk();
           }}
         />
       </Modal>

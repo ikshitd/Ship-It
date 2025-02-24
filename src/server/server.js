@@ -331,6 +331,17 @@ app.get('/get-users', authenticate, async (req, res) => {
   }
 });
 
+app.get('/get-user', authenticate, async (req, res) => {
+  try {
+    const userName = req.query.username;
+    const userId = parseInt(req.query.userId);
+    const user = await prisma.user.findUnique({ where: { name: userName, id: userId } });
+    res.status(200).json({ user: user });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while fetching the user' });
+  }
+});
+
 httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
