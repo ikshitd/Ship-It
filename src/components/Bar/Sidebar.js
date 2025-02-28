@@ -1,6 +1,7 @@
 import { Layout, Menu, Modal, Input, Divider, List, Avatar, Typography } from 'antd';
 import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons';
 import socket from '../../socket/socket.js';
+import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 
 export default function Sidebar({
   boards,
@@ -8,6 +9,8 @@ export default function Sidebar({
   setisAddBoardModalVisible,
   users,
   newBoardName,
+  newUser,
+  setNewUser,
   handleAddBoardModalOk,
   isAddBoardModalVisible,
   handleAddBoardModalCancel,
@@ -125,8 +128,18 @@ export default function Sidebar({
         onOk={handleAddUserModalOk}
         onCancel={handleAddUserModalCancel}
         title="Add new Team member on the board"
+        style={{ height: '100%' }}
       >
-        {' '}
+        <ReactSearchAutocomplete
+          placeholder="WORK IN PROGRESS... THIS DOESN'T WORK YET !!"
+          value={newUser.userName}
+          onChange={(e) => {
+            setNewUser({
+              ...newUser,
+              userName: e.target.value,
+            });
+          }}
+        />
       </Modal>
       <Modal
         title="Add New Board"

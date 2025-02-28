@@ -17,7 +17,10 @@ export default function Home() {
   const [newBoardName, setNewBoardName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState(null);
+  const [newUser, setNewUser] = useState({
+    userId: null,
+    userName: null,
+  });
 
   useEffect(() => {
     if (boards.length > 0) {
@@ -70,15 +73,14 @@ export default function Home() {
   };
 
   const handleAddUserModalOk = async () => {
-    setNewUser({
-      userName: 'ikshit',
-      userId: 10,
-    });
-    if (newUser != null) {
+    // dummy values
+    // setNewUser({
+    //   userName: 'ikshit',
+    //   userId: 10,
+    // });
+    if (newUser.userId != null) {
       try {
-        console.log('adding the user on the board');
         await addUser(currentBoardId, newUser);
-        console.log('Added the user on the board');
       } catch (err) {
         console.error('Failed to add user to the board', err);
       } finally {
@@ -171,6 +173,8 @@ export default function Home() {
         setisAddBoardModalVisible={setisAddBoardModalVisible}
         users={users}
         newBoardName={newBoardName}
+        newUser={newUser}
+        setNewUser={setNewUser}
         handleAddBoardModalOk={handleAddBoardModalOk}
         isAddBoardModalVisible={isAddBoardModalVisible}
         handleAddBoardModalCancel={handleAddBoardModalCancel}

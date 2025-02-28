@@ -96,7 +96,14 @@ export default function TaskDetails({
             <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Description</h3>
             <textarea
               value={updatedTaskDetails.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={async (e) => {
+                handleInputChange('description', e.target.value);
+                // const res = await axios.post('http://localhost:11434/api/generate', {
+                //   model: 'smollm:135m',
+                //   prompt: e.target.value,
+                //   stream: false,
+                // });
+              }}
               placeholder="Enter task description..."
               style={{
                 width: '100%',
