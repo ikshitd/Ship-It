@@ -1,98 +1,88 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { ReactComponent as LogoutIcon } from '../../assets/svg/logoutIcon.svg';
 import { ReactComponent as PersonOutLineIcon } from '../../assets/svg/personOutlineIcon.svg';
 import { ReactComponent as OrbitIcon } from '../../assets/svg/orbit.svg';
-import { Tooltip } from 'antd';
+import { Flex, Tooltip } from 'antd';
 import { useAppContext } from '../../context/Context.js';
+import { logout, reset } from '../../redux/slices/authSlice.js';
+import { ToastContainer, toast } from 'react-toastify';
 
-export default function Footer() {
+export default function Navbar() {
   const { userId } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
-  const pathMatchRoute = (route) => {
-    if (route === location.pathname) {
-      return true;
-    }
-  };
+  const pathMatchRoute = (route) => route === location.pathname;
 
   return (
-    <header className="navbar">
-      <nav className="navbarNav">
-        <ul className="navbarListItems">
-          <li className="navbarListItem" onClick={() => navigate('/')}>
-            <p>
-              {' '}
-              <OrbitIcon
-                style={{ position: 'absolute', left: '2%', bottom: '6%' }}
-                height="40px"
-                width="40px"
-                fill="white"
-              />
-            </p>
-            <p
-              style={{
-                color: 'white',
-                fontSize: '110%',
-                fontFamily: 'Concert One',
-                letterSpacing: '0.1em',
-                position: 'absolute',
-                left: '6%',
-                bottom: '%',
-                top: '15%',
-              }}
-              className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}
-            >
-              {' '}
-              <span style={{ fontSize: '120%' }}> Ship'It' </span> KEEPING DEV IN MOTION{' '}
-            </p>
-          </li>
-          <li
-            style={{ position: 'absolute', right: '0%', bottom: '20%' }}
-            className="navbarListItem"
-            onClick={() => navigate('/')}
+    <div className="navbar">
+      <ToastContainer />
+      <Flex justify="space-between" align="center" style={{ width: '90%', margin: '0 auto' }}>
+        <Flex
+          align="center"
+          style={{ position: 'relative', cursor: 'pointer' }}
+          onClick={() => navigate('/')}
+        >
+          <OrbitIcon height="40px" width="40px" fill="white" style={{ marginRight: '10px' }} />
+          <p
+            className={pathMatchRoute('/') ? 'navbarListItemNameActive' : 'navbarListItemName'}
+            style={{
+              top: '7px',
+              color: 'white',
+              fontSize: '110%',
+              fontFamily: 'Concert One',
+              letterSpacing: '0.1em',
+              position: 'relative',
+            }}
           >
-            <Tooltip title="Logout" placement="bottom">
-              <LogoutIcon
-                onClick={() => {
-                  setTimeout(() => {
-                    sessionStorage.clear();
-                    window.location.reload();
-                  }, 0);
-                }}
-                fill="white"
-                width="10%"
-                height="10%"
-              />
-            </Tooltip>
-          </li>
-          <li
-            style={{ position: 'absolute', right: '9%', bottom: '20%' }}
-            className="navbarListItem"
-            onClick={() => navigate('/')}
+            <span style={{ fontSize: '120%' }}>Ship'It'</span> KEEPING DEV IN MOTION
+          </p>
+        </Flex>
+
+        <Flex align="center" gap={20} style={{ position: 'relative' }}>
+          <Tooltip
+            title={!userId ? 'No User Logged In! Register or Sign in to the user profile.' : 'Profile'}
+            placement="bottom"
           >
-            <Tooltip
-              title={!userId ? 'No User Logged In! Register or Sign in to the user profile.' : 'Profile'}
-              placement="bottom"
-            >
+            <div style={{ cursor: 'pointer', position: 'relative' }}>
               <PersonOutLineIcon
                 onClick={() => {
                   setTimeout(() => {
-                    sessionStorage.clear();
                     if (userId) {
                       navigate('/profile');
-                      window.location.reload();
+                    } else {
+                      toast.error('Login to view your profile');
                     }
                   }, 0);
                 }}
                 fill="white"
-                width="10%"
-                height="10%"
+                width="30px"
+                height="30px"
               />
-            </Tooltip>
-          </li>
-        </ul>
-      </nav>
-    </header>
+            </div>
+          </Tooltip>
+
+          <Tooltip title="Logout" placement="bottom">
+            <div style={{ cursor: 'pointer', position: 'relative' }}>
+              <LogoutIcon
+                fill="white"
+                width="30px"
+                height="30px"
+                onClick={() => {
+                  if (userId) {
+                    dispatch(logout());
+                    dispatch(reset());
+                    // NEED TO FIGURE THIS OUT
+                    window.location.reload();
+                  }
+                }}
+              />
+            </div>
+          </Tooltip>
+        </Flex>
+      </Flex>
+    </div>
   );
 }

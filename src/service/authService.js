@@ -23,8 +23,11 @@ const login = async (user) => {
   return response.data;
 };
 
+const logout = async () => sessionStorage.removeItem('authToken');
+
 const authService = {
   register,
   login,
+  logout,
 };
 export default authService;
