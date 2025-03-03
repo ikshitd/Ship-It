@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import Task from './Task.js';
-import { Button, Select } from 'antd';
-import { useAppContext } from '../../context/Context.js';
+import { Button } from 'antd';
 import axios from 'axios';
 import socket from '../../socket/socket.js';
 import TaskDetails from '../TaskDetails.js';
 
 export default function Board({ board }) {
-  const { userId } = useAppContext();
+  const { userId } = useSelector((state) => state.board);
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const propagateData = (board) => {
@@ -41,7 +41,6 @@ export default function Board({ board }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [updatedTaskDetails, setUpdatedTaskDetails] = useState(defaultTaskDetails);
-  const { Option } = Select;
 
   const handleInputChange = (field, value) => {
     setUpdatedTaskDetails((prevDetails) => ({

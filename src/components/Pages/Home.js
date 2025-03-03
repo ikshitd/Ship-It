@@ -1,103 +1,22 @@
 import { Layout } from 'antd';
-import { useAppContext } from '../../context/Context.js';
-import { useState, useEffect } from 'react';
-import Board from '../Board/Board.js';
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
-import socket from '../../socket/socket.js';
-import axios from 'axios';
+import { fetchBoards } from '../../redux/slices/boardSlice.js';
 import Sidebar from '../Bar/Sidebar.js';
+import Board from '../Board/Board.js';
 
 export default function Home() {
-  const { boards, userId, addBoard, addUser } = useAppContext();
-  const { Content } = Layout;
-  const [currentBoardId, setCurrentBoardId] = useState(null);
-  const [isAddBoardModalVisible, setisAddBoardModalVisible] = useState(false);
-  const [isAddUserModalVisible, setisAddUserModalVisible] = useState(false);
-  const [newBoardName, setNewBoardName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({
-    userId: null,
-    userName: null,
-  });
-
-  useEffect(() => {
-    if (boards.length > 0) {
-      setCurrentBoardId(boards[0]?.id);
-    }
-  }, [boards]);
-
-  const fetchUsers = async () => {
-    try {
-      const token = sessionStorage.getItem('authToken');
-      const response = await axios.get(`http://localhost:3001/get-users?boardId=${currentBoardId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.data.boardUsers.users;
-    } catch (err) {
-      console.error('Error fetching the users for the boards:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (currentBoardId) {
-      const getUsers = async () => {
-        const usersResponse = await fetchUsers();
-        setUsers(usersResponse);
-      };
-      getUsers();
-    }
-  }, [currentBoardId]);
-
+  const { userId, boards, currentBoardId } = useSelector((state) => state.board);
   const selectedBoard = boards.find((board) => board.id === currentBoardId);
 
-  const handleAddBoardModalOk = async () => {
-    if (newBoardName.trim()) {
-      try {
-        setIsLoading(true);
-        const newBoard = await addBoard(newBoardName.trim());
-        setNewBoardName('');
-        setisAddBoardModalVisible(false);
-        socket.emit('boardAdded', {
-          boardId: newBoard.id,
-          userId: userId,
-          board: newBoard,
-        });
-      } catch (err) {
-        console.error('Failed to create board', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
+  const { Content } = Layout;
+  const dispatch = useDispatch();
 
-  const handleAddUserModalOk = async () => {
-    // dummy values
-    // setNewUser({
-    //   userName: 'ikshit',
-    //   userId: 10,
-    // });
-    if (newUser.userId != null) {
-      try {
-        await addUser(currentBoardId, newUser);
-      } catch (err) {
-        console.error('Failed to add user to the board', err);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const handleAddBoardModalCancel = () => {
-    setNewBoardName('');
-    setisAddBoardModalVisible(false);
-  };
-
-  const handleAddUserModalCancel = () => {
-    setNewUser('');
-    setisAddUserModalVisible(false);
-  };
+  useEffect(() => {
+    dispatch(fetchBoards());
+  }, [userId]);
 
   if (!userId) {
     return (
@@ -167,25 +86,7 @@ export default function Home() {
 
   return (
     <Layout style={{ backgroundColor: '#4064ce', position: 'static', minHeight: '100vh' }}>
-      <Sidebar
-        boards={boards}
-        currentBoardId={currentBoardId}
-        setisAddBoardModalVisible={setisAddBoardModalVisible}
-        users={users}
-        newBoardName={newBoardName}
-        newUser={newUser}
-        setNewUser={setNewUser}
-        handleAddBoardModalOk={handleAddBoardModalOk}
-        isAddBoardModalVisible={isAddBoardModalVisible}
-        handleAddBoardModalCancel={handleAddBoardModalCancel}
-        setNewBoardName={setNewBoardName}
-        isLoading={isLoading}
-        setCurrentBoardId={setCurrentBoardId}
-        isAddUserModalVisible={isAddUserModalVisible}
-        setisAddUserModalVisible={setisAddUserModalVisible}
-        handleAddUserModalCancel={handleAddUserModalCancel}
-        handleAddUserModalOk={handleAddUserModalOk}
-      />
+      <Sidebar />
       <Layout>
         <Content style={{ background: '#fff', borderRadius: '8px' }}>
           {selectedBoard ? (

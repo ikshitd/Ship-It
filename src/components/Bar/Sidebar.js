@@ -1,28 +1,23 @@
-import { Layout, Menu, Modal, Input, Divider, List, Avatar, Typography } from 'antd';
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Layout, Menu, Modal, Input, Divider, List, Avatar } from 'antd';
 import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons';
-import socket from '../../socket/socket.js';
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
+import socket from '../../socket/socket.js';
+import { setCurrentBoardId, fetchUsers, addBoard } from '../../redux/slices/boardSlice.js';
 
-export default function Sidebar({
-  boards,
-  currentBoardId,
-  setisAddBoardModalVisible,
-  users,
-  newBoardName,
-  newUser,
-  setNewUser,
-  handleAddBoardModalOk,
-  isAddBoardModalVisible,
-  handleAddBoardModalCancel,
-  setNewBoardName,
-  isLoading,
-  setCurrentBoardId,
-  isAddUserModalVisible,
-  setisAddUserModalVisible,
-  handleAddUserModalCancel,
-  handleAddUserModalOk,
-}) {
+export default function Sidebar() {
   const { Sider } = Layout;
+  const { boards, users, currentBoardId } = useSelector((state) => state.board);
+  const [newUser, setNewUser] = useState(''); // right now, [newUser = username], but will decide if it has to be {userId, userName}
+  const [newBoardName, setNewBoardName] = useState('');
+  const [isAddBoardModalVisible, setisAddBoardModalVisible] = useState(false);
+  const [isAddUserModalVisible, setisAddUserModalVisible] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchUsers(currentBoardId));
+  }, [currentBoardId, dispatch]);
 
   const menuItems = boards.map((board) => ({
     key: board.id.toString(),
@@ -32,10 +27,21 @@ export default function Sidebar({
   }));
 
   const handleMenuClick = ({ key }) => {
-    setCurrentBoardId(parseInt(key, 10));
+    dispatch(setCurrentBoardId(parseInt(key, 10)));
     socket.emit('boardSelected', {
       boardId: parseInt(key),
     });
+  };
+
+  const handleAddBoardModalOk = () => {
+    try {
+      dispatch(addBoard(newBoardName)).unwrap();
+    } catch (err) {
+      console.log(`Failed to create board: `, err);
+    } finally {
+      setNewBoardName('');
+      setisAddBoardModalVisible(false);
+    }
   };
 
   return (
@@ -125,8 +131,11 @@ export default function Sidebar({
       </Sider>
       <Modal
         open={isAddUserModalVisible}
-        onOk={handleAddUserModalOk}
-        onCancel={handleAddUserModalCancel}
+        // onOk={handleAddUserModalOk} // will do, while completing the `addUser` functionality
+        onCancel={() => {
+          setNewUser('');
+          setisAddUserModalVisible(false);
+        }}
         title="Add new Team member on the board"
         style={{ height: '100%' }}
       >
@@ -145,16 +154,19 @@ export default function Sidebar({
         title="Add New Board"
         open={isAddBoardModalVisible}
         onOk={handleAddBoardModalOk}
-        onCancel={handleAddBoardModalCancel}
-        okButtonProps={{ disabled: !newBoardName.trim() || isLoading }}
-        confirmLoading={isLoading}
+        onCancel={() => {
+          setNewBoardName('');
+          setisAddBoardModalVisible(false);
+        }}
+        okButtonProps={{ disabled: !newBoardName.trim() }}
+        // confirmLoading={isLoading}
       >
         <Input
           placeholder="Enter board name"
           value={newBoardName}
           onChange={(e) => setNewBoardName(e.target.value)}
           onPressEnter={() => {
-            if (newBoardName.trim() && !isLoading) handleAddBoardModalOk();
+            if (newBoardName.trim()) handleAddBoardModalOk();
           }}
         />
       </Modal>

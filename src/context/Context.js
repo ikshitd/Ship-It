@@ -47,15 +47,8 @@ export function AppContextProvider({ children }) {
       setBoards((prevBoards) => [...prevBoards, { id: boardId, ...board }]);
     });
 
-    socket.on('boardSelected', (newSelectedBoard) => {
-      const { boardId } = newSelectedBoard;
-      fetchData();
-      setSelectedBoardId(boardId);
-    });
-
     return () => {
       socket.off('boardAdded');
-      socket.off('boardSelected');
     };
   }, []);
 
