@@ -1,15 +1,16 @@
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { Tag } from 'antd';
 import 'react-datepicker/dist/react-datepicker.css';
-import { useAppContext } from '../../context/Context.js';
 import socket from '../../socket/socket.js';
 import TaskDetails from '../TaskDetails.js';
+import { removeTask, updateTask } from '../../redux/slices/boardSlice.js';
 
 export default function Task({ board, columnId, taskId, task }) {
-  const { updateTask, removeTask } = useAppContext();
-
+  const dispatch = useDispatch();
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
   const [updatedTaskDetails, setUpdatedTaskDetails] = useState({
     heading: task.heading,
     startDate: new Date(task.startDate),
@@ -35,20 +36,24 @@ export default function Task({ board, columnId, taskId, task }) {
   };
 
   const handleSubmit = () => {
-    try {
-      updateTask(boardId, taskId, updatedTaskDetails);
-      socket.emit('taskUpdated', {
-        boardId,
-        taskId,
-        columnId,
-        taskDetails: updatedTaskDetails,
-      });
-      setTimeout(() => {
-        setDrawerVisible(false);
-      }, 0);
-    } catch (err) {
-      console.error('Unable to update the task details', err);
-    }
+    dispatch(updateTask({ boardId: boardId, taskId: taskId, updatedTaskDetails: updatedTaskDetails }));
+    socket.emit('taskUpdated', {
+      boardId,
+      taskId,
+      columnId,
+      taskDetails: updatedTaskDetails,
+    });
+    setTimeout(() => {
+      setDrawerVisible(false);
+    }, 0);
+  };
+
+  const removeTaskFromBoard = () => {
+    dispatch(removeTask({ boardId: boardId, taskId: taskId }));
+    socket.emit('taskRemoved', {
+      boardId,
+      taskId,
+    });
   };
 
   return (
@@ -118,6 +123,7 @@ export default function Task({ board, columnId, taskId, task }) {
           handleInputChange={handleInputChange}
           setDrawerVisible={setDrawerVisible}
           handleSubmit={handleSubmit}
+          removeTask={removeTaskFromBoard}
         />
       </div>
     </div>

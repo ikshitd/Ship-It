@@ -1,15 +1,14 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { ReactComponent as LogoutIcon } from '../../assets/svg/logoutIcon.svg';
 import { ReactComponent as PersonOutLineIcon } from '../../assets/svg/personOutlineIcon.svg';
 import { ReactComponent as OrbitIcon } from '../../assets/svg/orbit.svg';
 import { Flex, Tooltip } from 'antd';
-import { useAppContext } from '../../context/Context.js';
 import { logout, reset } from '../../redux/slices/authSlice.js';
 import { ToastContainer, toast } from 'react-toastify';
 
 export default function Navbar() {
-  const { userId } = useAppContext();
+  const { userId } = useSelector((state) => state.board);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();

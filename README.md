@@ -1,7 +1,7 @@
 ## TODO
 
-- ### Frontend & Backend
-  - To add task-remove in real-time feature.
+- ### Frontend
+  - To figure out the working of socket.io and redux via the middlewares for real-time updates on all open sessions.
 
 # Getting Started with Create React App
 

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { Button } from 'antd';
 import Task from './Task.js';
-import { Button, Select } from 'antd';
-import { useAppContext } from '../../context/Context.js';
-import axios from 'axios';
 import socket from '../../socket/socket.js';
 import TaskDetails from '../TaskDetails.js';
+import { addTask } from '../../redux/slices/boardSlice.js';
 
-export default function Board({ board }) {
-  const { userId } = useAppContext();
+export default function Board() {
+  const { userId } = useSelector((state) => state.board);
+  const board = useSelector((state) => state.board.selectedBoard); // replacing the board prop with the selected board from the redux global state
+  const dispatch = useDispatch();
   const DEFAULT_COLUMNS = ['NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE'];
 
   const propagateData = (board) => {
@@ -41,7 +43,6 @@ export default function Board({ board }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [updatedTaskDetails, setUpdatedTaskDetails] = useState(defaultTaskDetails);
-  const { Option } = Select;
 
   const handleInputChange = (field, value) => {
     setUpdatedTaskDetails((prevDetails) => ({
@@ -59,36 +60,23 @@ export default function Board({ board }) {
     };
   }, [board]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(
-        'http://localhost:3001/add-task',
-        {
-          userId: userId,
-          boardId: board.id,
-          columnId: category,
-          taskDetails: updatedTaskDetails,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
-          },
-        }
-      );
-      setUpdatedTaskDetails(defaultTaskDetails);
-      socket.emit('taskAdded', {
+  const handleSubmit = async () => {
+    const newTask = await dispatch(
+      addTask({
         userId: userId,
         boardId: board.id,
-        columnId: category,
-        taskDetails: response.data.task,
-      });
-      setTimeout(() => {
-        setDrawerVisible(false);
-      }, 0);
-    } catch (err) {
-      console.error('Unable to create a new task: ', err);
-    }
+        category: category,
+        updatedTaskDetails: updatedTaskDetails,
+      })
+    ).unwrap();
+    setUpdatedTaskDetails(defaultTaskDetails);
+    socket.emit('taskAdded', {
+      userId: userId,
+      boardId: board.id,
+      columnId: category,
+      taskDetails: newTask,
+    });
+    setDrawerVisible(false);
   };
 
   useEffect(() => {
@@ -186,12 +174,6 @@ export default function Board({ board }) {
     });
   }
 
-  async function addTask(e, columnId) {
-    e.preventDefault();
-    setCategory(columnId);
-    setDrawerVisible(true);
-  }
-
   return (
     <div>
       <DragDropContext
@@ -228,7 +210,10 @@ export default function Board({ board }) {
                         style={{ fontSize: '13px' }}
                         type="secondary"
                         size="small"
-                        onClick={(e) => addTask(e, columnId)}
+                        onClick={() => {
+                          setCategory(columnId);
+                          setDrawerVisible(true);
+                        }}
                       >
                         Add Task
                       </Button>
