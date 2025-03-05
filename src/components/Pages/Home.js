@@ -8,8 +8,8 @@ import Sidebar from '../Bar/Sidebar.js';
 import Board from '../Board/Board.js';
 
 export default function Home() {
-  const { userId, boards, currentBoardId } = useSelector((state) => state.board);
-  const selectedBoard = boards.find((board) => board.id === currentBoardId);
+  const { userId, boards, selectedBoard, currentBoardId } = useSelector((state) => state.board);
+  // const selectedBoard = boards.find((board) => board.id === currentBoardId);
 
   const { Content } = Layout;
   const dispatch = useDispatch();
@@ -90,7 +90,7 @@ export default function Home() {
       <Layout>
         <Content style={{ background: '#fff', borderRadius: '8px' }}>
           {selectedBoard ? (
-            <Board board={selectedBoard} />
+            <Board />
           ) : (
             <p style={{ textAlign: 'center', fontSize: '18px', color: '#888' }}>
               No board selected. Please select a board from the sidebar.

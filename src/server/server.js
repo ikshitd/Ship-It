@@ -288,7 +288,7 @@ app.post('/remove-task', authenticate, async (req, res) => {
     await prisma.task.delete({
       where: { id: taskId },
     });
-    res.status(200).json({ message: 'Task deleted successfully' });
+    res.status(200).json({ message: 'Task deleted successfully', details: { boardId, taskId } });
   } catch (err) {
     res.status(500).json({ error: 'An error occurred while deleting the task' });
   }

@@ -10,6 +10,7 @@ export default function TaskDetails({
   setIsEditing,
   handleInputChange,
   handleSubmit,
+  removeTask,
 }) {
   const { Option } = Select;
   return (
@@ -119,9 +120,21 @@ export default function TaskDetails({
             />
           </section>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-            <Button type="primary" onClick={handleSubmit} style={{ width: '50%' }}>
-              Add-Task
+            <Button type="primary" onClick={handleSubmit} style={{ width: '30%' }}>
+              {heading}
             </Button>
+            {heading === 'Update Task' ? (
+              <Button
+                type="secondary"
+                onClick={() => {
+                  removeTask();
+                  setDrawerVisible(false);
+                }}
+                style={{ width: '30%' }}
+              >
+                Remove Task
+              </Button>
+            ) : null}
           </div>
         </div>
       </form>

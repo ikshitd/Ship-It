@@ -7,6 +7,7 @@ const details = {
   boards: [],
   users: [],
   currentBoardId: null,
+  selectedBoard: null,
   isLoading: false,
   message: null,
 };
@@ -24,6 +25,7 @@ export const fetchUsers = createAsyncThunk('board/fetchUsers', async (currentBoa
   }
 });
 
+// ================= Board Updates ================= //
 export const fetchBoards = createAsyncThunk('board/fetchBoards', async (thunkAPI) => {
   try {
     return await boardService.fetchBoards(details.userId);
@@ -40,12 +42,43 @@ export const addBoard = createAsyncThunk('board/addBoard', async (boardName, thu
   }
 });
 
+// ================= Task Updates ================= //
+export const addTask = createAsyncThunk('board/addTask', async (addTaskDetails, thunkAPI) => {
+  const { userId, boardId, category, updatedTaskDetails } = addTaskDetails;
+  try {
+    return await boardService.addTask(userId, boardId, category, updatedTaskDetails);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
+export const updateTask = createAsyncThunk('board/updateTask', async (updatedDetails, thunkAPI) => {
+  const { boardId, taskId, updatedTaskDetails } = updatedDetails;
+  try {
+    return await boardService.updateTask(boardId, taskId, updatedTaskDetails);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
+export const removeTask = createAsyncThunk('board/removeTask', async (taskDetails, thunkAPI) => {
+  const { boardId, taskId } = taskDetails;
+  try {
+    return await boardService.removeTask(boardId, taskId);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
 export const boardSlice = createSlice({
   name: 'board',
   initialState: details,
   reducers: {
     setCurrentBoardId: (state, action) => {
       state.currentBoardId = action.payload;
+    },
+    setSelectedBoard: (state, action) => {
+      state.selectedBoard = action.payload;
     },
     setUsers: async (state, action) => {
       state.users = await boardService.fetchUsers(action.payload);
@@ -82,9 +115,59 @@ export const boardSlice = createSlice({
       })
       .addCase(addBoard.rejected, (state) => {
         state.isLoading = false;
+      })
+      .addCase(addTask.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addTask.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.selectedBoard.tasks = [...state.selectedBoard.tasks, action.payload];
+        state.boards = state.boards.map((board) =>
+          board.id === action.payload.boardId ? { ...board, tasks: [...board.tasks, action.payload] } : board
+        );
+      })
+      .addCase(addTask.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(removeTask.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(removeTask.fulfilled, (state, action) => {
+        const { boardId, taskId } = action.payload;
+        state.isLoading = false;
+        state.selectedBoard.tasks = state.selectedBoard.tasks.filter((task) => task.id !== taskId);
+        state.boards = state.boards.map((board) =>
+          board.id === boardId ? { ...board, tasks: board.tasks.filter((task) => task.id !== taskId) } : board
+        );
+      })
+      .addCase(removeTask.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(updateTask.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateTask.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const updatedTask = action.payload;
+        const taskId = updatedTask.id;
+        const boardId = updatedTask.boardId;
+        state.selectedBoard.tasks = state.selectedBoard.tasks.map((task) =>
+          task.id === taskId ? { ...task, ...updatedTask } : task
+        );
+        state.boards = state.boards.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                tasks: board.tasks.map((task) => (task.id === taskId ? { ...task, ...updatedTask } : task)),
+              }
+            : board
+        );
+      })
+      .addCase(updateTask.rejected, (state) => {
+        state.isLoading = false;
       });
   },
 });
 
-export const { setCurrentBoardId, setUsers } = boardSlice.actions;
+export const { setCurrentBoardId, setSelectedBoard, setUsers } = boardSlice.actions;
 export default boardSlice.reducer;

@@ -4,7 +4,7 @@ import { Layout, Menu, Modal, Input, Divider, List, Avatar } from 'antd';
 import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 import socket from '../../socket/socket.js';
-import { setCurrentBoardId, fetchUsers, addBoard } from '../../redux/slices/boardSlice.js';
+import { setCurrentBoardId, fetchUsers, addBoard, setSelectedBoard } from '../../redux/slices/boardSlice.js';
 
 export default function Sidebar() {
   const { Sider } = Layout;
@@ -23,11 +23,12 @@ export default function Sidebar() {
     key: board.id.toString(),
     label: board.name,
     icon: <AppstoreOutlined />,
-    onClick: () => handleMenuClick({ key: board.id.toString() }),
+    onClick: () => handleMenuClick({ key: board.id.toString(), board: board }),
   }));
 
-  const handleMenuClick = ({ key }) => {
+  const handleMenuClick = ({ key, board }) => {
     dispatch(setCurrentBoardId(parseInt(key, 10)));
+    /* this is also the state that we are storing.....*/ dispatch(setSelectedBoard(board));
     socket.emit('boardSelected', {
       boardId: parseInt(key),
     });

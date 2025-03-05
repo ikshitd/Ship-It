@@ -31,10 +31,63 @@ const addBoard = async (userId, boardName) => {
   return response.data.board;
 };
 
+const addTask = async (userId, boardId, category, updatedTaskDetails) => {
+  const response = await axios.post(
+    'http://localhost:3001/add-task',
+    {
+      userId: userId,
+      boardId: boardId,
+      columnId: category,
+      taskDetails: updatedTaskDetails,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
+      },
+    }
+  );
+  return response.data.task;
+};
+
+const updateTask = async (boardId, taskId, updatedDetails) => {
+  const token = sessionStorage.getItem('authToken');
+  const response = await axios.post(
+    'http://localhost:3001/update-task',
+    {
+      boardId: boardId,
+      taskId: taskId,
+      taskDetails: updatedDetails,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data.task;
+};
+
+const removeTask = async (boardId, taskId) => {
+  const token = sessionStorage.getItem('authToken');
+  const response = await axios.post(
+    'http://localhost:3001/remove-task',
+    {
+      boardId: boardId,
+      taskId: taskId,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data.details;
+};
+
 const boardService = {
   fetchBoards,
   fetchUsers,
   addBoard,
+
+  addTask,
+  updateTask,
+  removeTask,
 };
 
 export default boardService;
