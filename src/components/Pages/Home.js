@@ -4,18 +4,20 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
 import { fetchBoards } from '../../redux/slices/boardSlice.js';
+import { fetchUserDetails } from '../../redux/slices/authSlice.js';
 import Sidebar from '../Bar/Sidebar.js';
 import Board from '../Board/Board.js';
+import Chatbar from '../Chat/Chatbar.js';
 
 export default function Home() {
-  const { userId, boards, selectedBoard, currentBoardId } = useSelector((state) => state.board);
-  // const selectedBoard = boards.find((board) => board.id === currentBoardId);
+  const { userId, selectedBoard } = useSelector((state) => state.board);
 
   const { Content } = Layout;
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(fetchBoards());
+    dispatch(fetchUserDetails(userId));
   }, [userId]);
 
   if (!userId) {
@@ -97,6 +99,7 @@ export default function Home() {
             </p>
           )}
         </Content>
+        <Chatbar />
       </Layout>
     </Layout>
   );

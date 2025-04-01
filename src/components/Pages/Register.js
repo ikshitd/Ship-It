@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ReactComponent as ArrowRightIcon } from '../../assets/svg/keyboardArrowRightIcon.svg';
 import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
-import { ReactComponent as ShareIcon } from '../../assets/svg/shareIcon.svg';
+import { Layout, Input } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { register, reset } from '../../redux/slices/authSlice.js';
 import { ToastContainer, toast } from 'react-toastify';
@@ -20,7 +19,7 @@ export default function Register() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { user, isError, isLoading, isSuccess, message } = useSelector((state) => state.auth);
+  const { user, isError, isSuccess, message } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (isError) toast.error(message);
@@ -54,24 +53,15 @@ export default function Register() {
       <ToastContainer />
       <div
         style={{
-          minHeight: '100vh',
-          display: 'flex',
-          justifyContent: 'center',
+          display: 'grid',
+          placeItems: 'center',
           alignItems: 'center',
           flexDirection: 'column',
-          backgroundColor: '#f9f9f9',
-          padding: '20px',
         }}
       >
-        <div style={{ marginBottom: '30px' }}>
-          <ShareIcon fill="#FFC107" width="100px" height="100px" />
-        </div>
         <div
           style={{
-            backgroundColor: '#fff',
             padding: '30px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
             width: '100%',
             maxWidth: '500px',
             textAlign: 'center',
@@ -85,42 +75,42 @@ export default function Register() {
                 marginBottom: '20px',
               }}
             >
-              Create Your Account!
+              Create Your Account !
             </p>
           </header>
           <form onSubmit={onSubmit}>
-            <input
+            <Input
               type="text"
-              className="nameInput"
               placeholder="User Name"
               required
               id="name"
               value={name}
               onChange={onChange}
               style={{
-                fontSize: '20px',
+                height: '55px',
+                fontSize: '16px',
                 width: '100%',
                 paddingLeft: '50px',
                 marginBottom: '15px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
+                borderRadius: '0px',
+                border: '1px solid black',
               }}
             />
-            <input
+            <Input
               type="email"
-              className="emailInput"
               placeholder="Email"
               required
               id="email"
               value={email}
               onChange={onChange}
               style={{
-                fontSize: '20px',
+                height: '55px',
+                fontSize: '16px',
                 width: '100%',
                 paddingLeft: '50px',
                 marginBottom: '15px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
+                borderRadius: '0px',
+                border: '1px solid black',
               }}
             />
             <div
@@ -129,20 +119,20 @@ export default function Register() {
                 marginBottom: '20px',
               }}
             >
-              <input
+              <Input
                 type={showPassword ? 'text' : 'password'}
-                className="passwordInput"
                 placeholder="Password"
                 required
                 id="password"
                 value={password}
                 onChange={onChange}
                 style={{
-                  fontSize: '20px',
+                  height: '55px',
+                  fontSize: '16px',
                   width: '100%',
                   paddingLeft: '50px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd',
+                  borderRadius: '0px',
+                  border: '1px solid black',
                 }}
               />
               <img
@@ -168,20 +158,38 @@ export default function Register() {
               }}
             >
               <button
-                type="submit"
+                type="primary"
                 style={{
+                  width: '100%',
                   padding: '10px 20px',
-                  backgroundColor: '#28a745',
+                  backgroundColor: '#10a37e',
                   color: 'white',
-                  border: 'none',
+                  // border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer',
                 }}
               >
-                <ArrowRightIcon fill="#ffffff" width="24px" height="24px" />
+                {/* <ArrowRightIcon fill="#ffffff" width="24px" height="24px" /> */}
+                Register
               </button>
             </div>
           </form>
+          <p>
+            Already have an account?{' '}
+            <span>
+              <Link to="/login" style={{ display: 'inline' }}>
+                <span
+                  style={{
+                    color: '#007bff',
+                    marginTop: '20px',
+                    fontSize: '16px',
+                  }}
+                >
+                  Login Instead
+                </span>
+              </Link>
+            </span>
+          </p>
           {error && (
             <p
               style={{

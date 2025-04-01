@@ -42,7 +42,7 @@ export default function Navbar() {
 
         <Flex align="center" gap={20} style={{ position: 'relative' }}>
           <Tooltip
-            title={!userId ? 'No User Logged In! Register or Sign in to the user profile.' : 'Profile'}
+            title={!userId ? 'No User Logged In! Register or Sign in to the user profile.' : 'account'}
             placement="bottom"
           >
             <div style={{ cursor: 'pointer', position: 'relative' }}>

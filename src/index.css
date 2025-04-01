@@ -1,5 +1,5 @@
 body {
-  margin: 0;
+  margin: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -51,7 +51,7 @@ button {
   border-style: solid;
   border-width: 1.5px;
   /* font-family: 'Montserrat', sans-serif; */
-  padding: 0 3rem;
+  /* padding: 0 3rem; */
   font-size: 1rem;
   border-radius: 0.4rem;
 }
@@ -210,7 +210,6 @@ button {
 
 .emailInput {
   margin-bottom: 2rem;
-  background: url('./assets/svg/personIcon.svg') #ffffff 2.5% center no-repeat;
 }
 
 .passwordInputDiv {
@@ -219,7 +218,6 @@ button {
 
 .passwordInput {
   margin-bottom: 2rem;
-  background: url('./assets/svg/lockIcon.svg') #ffffff 2.5% center no-repeat;
 }
 
 .showPassword {
@@ -896,7 +894,7 @@ h3 {
 .section-container {
   flex: 1;
   border-radius: 0px;
-  border-right: 1px solid #ccc;
+  border-right: 0.5px solid #ccc;
   padding: 10px;
   text-align: center;
 }
@@ -957,7 +955,6 @@ h3 {
 
 .section-heading {
   position: 'fixed';
-  font-family: 'Consolas';
   font-size: 1rem;
   margin-left: 25px;
 }
@@ -974,4 +971,10 @@ h3 {
   overflow-y: scroll;
   height: 200vh;
   max-height: 100%;
+}
+
+.custom-menu-item {
+  font-size: 13px;
+  color: black !important;
+  font-weight: bold;
 }

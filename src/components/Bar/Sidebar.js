@@ -23,12 +23,13 @@ export default function Sidebar() {
     key: board.id.toString(),
     label: board.name,
     icon: <AppstoreOutlined />,
+    className: 'custom-menu-item',
     onClick: () => handleMenuClick({ key: board.id.toString(), board: board }),
   }));
 
   const handleMenuClick = ({ key, board }) => {
     dispatch(setCurrentBoardId(parseInt(key, 10)));
-    /* this is also the state that we are storing.....*/ dispatch(setSelectedBoard(board));
+    dispatch(setSelectedBoard(board));
     socket.emit('boardSelected', {
       boardId: parseInt(key),
     });
@@ -59,17 +60,15 @@ export default function Sidebar() {
       >
         <div>
           <div style={{ justifyContent: 'space-between' }} className="flex items-center justify-between mb-4">
-            <p
+            <h1
               style={{
-                fontFamily: 'consolas',
                 color: 'black',
-                fontSize: '16px',
                 fontWeight: 'bold',
                 marginLeft: '10%',
               }}
             >
               {'Boards'}
-            </p>
+            </h1>
             <PlusOutlined onClick={() => setisAddBoardModalVisible(true)} style={{ marginRight: '10%' }} />
           </div>
         </div>
@@ -80,6 +79,7 @@ export default function Sidebar() {
             selectedKeys={[currentBoardId?.toString()]}
             items={menuItems}
             style={{
+              fontSize: '13px',
               backgroundColor: '#ccdcff',
             }}
           />
@@ -91,18 +91,15 @@ export default function Sidebar() {
             <Divider />
             <div>
               <div style={{ justifyContent: 'space-between', display: 'flex' }}>
-                <p
+                <h1
                   style={{
-                    fontSize: '16px',
-                    fontFamily: 'consolas',
                     color: 'black',
                     fontWeight: 'bold',
                     marginLeft: '10%',
                   }}
-                  level={5}
                 >
                   Team Members
-                </p>
+                </h1>
                 <TeamOutlined
                   onClick={() => {
                     setisAddUserModalVisible(true);
@@ -113,11 +110,15 @@ export default function Sidebar() {
               {users.length > 0 ? (
                 <List
                   dataSource={users}
-                  style={{ color: 'black' }}
                   renderItem={(user) => (
                     <List.Item>
                       <List.Item.Meta
-                        avatar={<Avatar>{user.name.charAt(0).toUpperCase()}</Avatar>}
+                        style={{ height: '15px', marginLeft: '10%' }}
+                        avatar={
+                          <Avatar style={{ height: '20px', width: '20px' }}>
+                            {user.name.charAt(0).toUpperCase()}
+                          </Avatar>
+                        }
                         title={user.name}
                       />
                     </List.Item>

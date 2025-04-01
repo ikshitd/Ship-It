@@ -1,5 +1,15 @@
 import axios from 'axios';
 
+// ================= User Details ================= //
+const fetchUserDetails = async (userId) => {
+  const token = sessionStorage.getItem('authToken');
+  const response = await axios.get(`http://localhost:3001/get-user?userId=${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+// ================= Authentication ================= //
 const register = async (user) => {
   const { name, email, password } = user;
   const response = await axios.post('http://localhost:3001/register', {
@@ -26,6 +36,7 @@ const login = async (user) => {
 const logout = async () => sessionStorage.removeItem('authToken');
 
 const authService = {
+  fetchUserDetails,
   register,
   login,
   logout,

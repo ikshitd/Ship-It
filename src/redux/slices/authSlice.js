@@ -12,6 +12,15 @@ const initialState = {
   message: '',
 };
 
+// FETCH USER DETAILS //
+export const fetchUserDetails = createAsyncThunk('auth/fetchUserDetails', async (userId, thunkAPI) => {
+  try {
+    return await authService.fetchUserDetails(userId);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
 // REGISTER USER //
 export const register = createAsyncThunk('auth/register', async (user, thunkAPI) => {
   try {
@@ -78,6 +87,17 @@ export const authSlice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
+      })
+      .addCase(fetchUserDetails.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchUserDetails.fulfilled, (state, action) => {
+        console.log(action.payload.user);
+        state.isLoading = false;
+        state.user = action.payload.user;
+      })
+      .addCase(fetchUserDetails.rejected, (state) => {
+        state.isLoading = false;
       });
   },
 });
