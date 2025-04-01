@@ -138,7 +138,7 @@ export default function Login() {
                 type="submit"
                 style={{
                   padding: '10px 20px',
-                  backgroundColor: '',
+                  backgroundColor: '#007bff',
                   color: 'white',
                   width: '100%',
                   border: 'none',

@@ -201,17 +201,6 @@ export default function Register() {
               {error}
             </p>
           )}
-          <Link to="/login">
-            <p
-              style={{
-                color: '#007bff',
-                marginTop: '20px',
-                fontSize: '16px',
-              }}
-            >
-              Log In Instead
-            </p>
-          </Link>
         </div>
       </div>
     </>
