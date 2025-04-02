@@ -23,9 +23,6 @@ export default function Register() {
 
   useEffect(() => {
     if (isError) toast.error(message);
-    if (isSuccess || user) {
-      navigate('/login');
-    }
     setFormData(defaultFormValues);
     dispatch(reset());
   }, [user, isError, isSuccess, message, navigate, dispatch]);
@@ -45,7 +42,10 @@ export default function Register() {
       email,
       password,
     };
-    dispatch(register(userData));
+    await dispatch(register(userData));
+    if (isSuccess || user) {
+      navigate('/login');
+    }
   };
 
   return (
@@ -92,8 +92,7 @@ export default function Register() {
                 width: '100%',
                 paddingLeft: '50px',
                 marginBottom: '15px',
-                borderRadius: '0px',
-                border: '1px solid black',
+                border: '1px solid #abb0ad',
               }}
             />
             <Input
@@ -109,8 +108,7 @@ export default function Register() {
                 width: '100%',
                 paddingLeft: '50px',
                 marginBottom: '15px',
-                borderRadius: '0px',
-                border: '1px solid black',
+                border: '1px solid #abb0ad',
               }}
             />
             <div
@@ -131,8 +129,7 @@ export default function Register() {
                   fontSize: '16px',
                   width: '100%',
                   paddingLeft: '50px',
-                  borderRadius: '0px',
-                  border: '1px solid black',
+                  border: '1px solid #abb0ad',
                 }}
               />
               <img

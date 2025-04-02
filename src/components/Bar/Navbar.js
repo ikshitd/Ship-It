@@ -6,6 +6,7 @@ import { ReactComponent as OrbitIcon } from '../../assets/svg/orbit.svg';
 import { Flex, Tooltip } from 'antd';
 import { logout, reset } from '../../redux/slices/authSlice.js';
 import { ToastContainer, toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 export default function Navbar() {
   const { userId } = useSelector((state) => state.board);
@@ -62,7 +63,12 @@ export default function Navbar() {
               />
             </div>
           </Tooltip>
-
+          <Link to="/login">
+            <p className="navbar-link"> Login </p>
+          </Link>
+          <Link to="/register">
+            <p className="navbar-link"> Register </p>
+          </Link>
           <Tooltip title="Logout" placement="bottom">
             <div style={{ cursor: 'pointer', position: 'relative' }}>
               <LogoutIcon

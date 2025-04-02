@@ -978,3 +978,8 @@ h3 {
   color: black !important;
   font-weight: bold;
 }
+
+.navbar-link {
+  font-size: 15px;
+  color: white;
+}

@@ -22,12 +22,6 @@ export default function Login() {
 
   useEffect(() => {
     if (isError) toast.error(message);
-    if (isSuccess || user) {
-      setTimeout(() => {
-        navigate('/');
-        window.location.reload(); // need to find some way to fix this small issue //
-      }, 0);
-    }
     setFormData(defaultFormValues);
     dispatch(reset());
   }, [user, isError, isLoading, isSuccess, message, navigate, dispatch]);
@@ -46,7 +40,13 @@ export default function Login() {
       email,
       password,
     };
-    dispatch(login(userData));
+    await dispatch(login(userData));
+    if (isSuccess || user) {
+      setTimeout(() => {
+        navigate('/');
+        window.location.reload(); // need to find some way to fix this small issue //
+      }, 0);
+    }
   }
 
   return (
@@ -94,8 +94,7 @@ export default function Login() {
                 paddingLeft: '50px',
                 marginBottom: '15px',
                 height: '55px',
-                border: '1px solid black',
-                borderRadius: '0px',
+                border: '1px solid #abb0ad',
               }}
             />
             <div style={{ position: 'relative', marginBottom: '20px' }}>
@@ -111,8 +110,7 @@ export default function Login() {
                   width: '100%',
                   paddingLeft: '50px',
                   height: '55px',
-                  border: '1px solid black',
-                  borderRadius: '0px',
+                  border: '1px solid #abb0ad',
                 }}
               />
               <img
