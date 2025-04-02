@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import visibilityIcon from '../../assets/svg/visibilityIcon.svg';
-import { Layout, Input } from 'antd';
+import { Input } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { register, reset } from '../../redux/slices/authSlice.js';
 import { ToastContainer, toast } from 'react-toastify';
