@@ -70,6 +70,15 @@ export const removeTask = createAsyncThunk('board/removeTask', async (taskDetail
   }
 });
 
+// ================= Comment Updates ================= //
+export const fetchComments = createAsyncThunk('board/task/fetchComments', async (taskId, thunkAPI) => {
+  try {
+    return await boardService.fetchComments(taskId);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
 export const boardSlice = createSlice({
   name: 'board',
   initialState: details,

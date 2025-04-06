@@ -80,6 +80,14 @@ const removeTask = async (boardId, taskId) => {
   return response.data.details;
 };
 
+const fetchComments = async (taskId) => {
+  const token = sessionStorage.getItem('authToken');
+  const response = await axios.get(`http://localhost:3001/fetch-comments?taskId=${taskId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.comments;
+};
+
 const boardService = {
   fetchBoards,
   fetchUsers,
@@ -88,6 +96,8 @@ const boardService = {
   addTask,
   updateTask,
   removeTask,
+
+  fetchComments,
 };
 
 export default boardService;

@@ -13,6 +13,7 @@ model User {
   email     String  @unique
   password  String
   boards    Board[] @relation("UserBoards")
+  comments  Comment[]
 }
 
 model Board {
@@ -35,6 +36,17 @@ model Task {
   assignee    String
   boardId       Int   
   board         Board     @relation(fields: [boardId], references: [id])
+  comments      Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  userId    Int
+  taskId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id])
 }
 
 enum Status {

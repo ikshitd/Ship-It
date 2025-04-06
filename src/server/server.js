@@ -96,10 +96,21 @@ app.get('/all-boards', async (req, res) => {
   res.json(boards);
 });
 
+app.get('/fetch-all-comments', async (req, res) => {
+  try {
+    const comments = await prisma.comment.findMany({ include: { user: true, task: true } });
+    res.status(200).json({ comments: comments });
+  } catch (err) {
+    return res.status(500).json({ error: 'error fetching all the comments' });
+  }
+});
+
 app.get('/tasks', authenticate, async (req, res) => {
   const task = await prisma.task.findMany();
   res.json(task);
 });
+
+// ============= AUTHENTICATION =============
 
 app.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
@@ -141,6 +152,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// ============= BOARDS =============
 app.get('/boards', authenticate, async (req, res) => {
   const userId = parseInt(req.query.userId);
   try {
@@ -185,6 +197,7 @@ app.post('/add-board', authenticate, async (req, res) => {
   }
 });
 
+// ============= TASK =============
 app.post('/add-task', authenticate, async (req, res) => {
   try {
     const { userId, boardId, columnId, taskDetails } = req.body;
@@ -294,6 +307,8 @@ app.post('/remove-task', authenticate, async (req, res) => {
   }
 });
 
+// ============= USERS =============
+
 app.post('/add-user', authenticate, async (req, res) => {
   try {
     const { boardId, userId } = req.body;
@@ -343,6 +358,39 @@ app.get('/get-user', authenticate, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'An error occurred while fetching the user' });
   }
+});
+
+// ============= COMMENTS =============
+
+app.get('/fetch-comments', authenticate, async (req, res) => {
+  try {
+    const taskId = parseInt(req.query.taskId);
+    if (!taskId) {
+      return res.status(400).json({ error: 'TaskId not provided' });
+    }
+    const comments = await prisma.comment.findMany({
+      where: { taskId },
+      include: { user: true },
+    });
+    return res.status(200).json({ comments });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while fetching the comments' });
+  }
+});
+
+app.post('/add-comment', authenticate, async (req, res) => {
+  const { content, taskId, userId } = req.body;
+  if (!(taskId & userId)) {
+    res.status(400).json({ error: 'TaskId or UserId not provided.' });
+  }
+  const addedComment = await prisma.comment.create({
+    data: {
+      content,
+      taskId,
+      userId,
+    },
+  });
+  res.status(200).json({ message: 'Comment added successfully ', addedComment });
 });
 
 httpServer.listen(PORT, () => {

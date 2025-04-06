@@ -10,7 +10,6 @@ export default function Task({ board, columnId, taskId, task }) {
   const dispatch = useDispatch();
   const [isDrawerVisible, setDrawerVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
   const [updatedTaskDetails, setUpdatedTaskDetails] = useState({
     heading: task.heading,
     startDate: new Date(task.startDate),
@@ -80,7 +79,6 @@ export default function Task({ board, columnId, taskId, task }) {
         {task.priority != null ? (
           <Tag
             style={{
-              fontFamily: 'Monaco',
               fontSize: '13px',
               justifyContent: 'center',
               textAlign: 'center',
@@ -115,6 +113,7 @@ export default function Task({ board, columnId, taskId, task }) {
           </Tag>
         ) : null}
         <TaskDetails
+          taskId={taskId}
           heading="Update Task"
           isDrawerVisible={isDrawerVisible}
           isEditing={isEditing}

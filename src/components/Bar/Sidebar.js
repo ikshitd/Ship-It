@@ -16,7 +16,7 @@ export default function Sidebar() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchUsers(currentBoardId));
+    if (currentBoardId) dispatch(fetchUsers(currentBoardId));
   }, [currentBoardId, dispatch]);
 
   const menuItems = boards.map((board) => ({

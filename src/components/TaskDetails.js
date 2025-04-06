@@ -1,7 +1,11 @@
-import { Button, Select, Input, Drawer, DatePicker } from 'antd';
+import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { Button, Select, Input, Drawer, DatePicker, Divider } from 'antd';
 import dayjs from 'dayjs';
+import { fetchComments } from '../redux/slices/boardSlice.js';
 
 export default function TaskDetails({
+  taskId,
   heading,
   isDrawerVisible,
   setDrawerVisible,
@@ -12,7 +16,22 @@ export default function TaskDetails({
   handleSubmit,
   removeTask,
 }) {
+  const [comments, setComments] = useState([]);
   const { Option } = Select;
+  const dispatch = useDispatch();
+
+  const fetchAndLoadComments = async () => {
+    const response = await dispatch(fetchComments(taskId)).unwrap();
+    setComments(response);
+    console.log('comments: ', comments);
+  };
+
+  useEffect(() => {
+    if (isDrawerVisible) {
+      fetchAndLoadComments();
+    }
+  }, [isDrawerVisible]);
+
   return (
     <Drawer
       value={isDrawerVisible}
@@ -29,7 +48,7 @@ export default function TaskDetails({
       }}
     >
       <form>
-        <div style={{ padding: '16px', fontFamily: 'Monaco, sans-serif' }}>
+        <div style={{ padding: '16px' }}>
           <section style={{ marginBottom: '24px', textAlign: 'center' }}>
             {isEditing ? (
               <Input
@@ -119,7 +138,39 @@ export default function TaskDetails({
               }}
             />
           </section>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+          <Divider> COMMENTS </Divider>
+          <section style={{ marginBottom: '30px' }}>
+            <div
+              style={{
+                maxHeight: '200px',
+                overflowY: 'auto',
+                backgroundColor: '#f9f9f9',
+                padding: '10px',
+                borderRadius: '8px',
+              }}
+            >
+              {comments.length > 0 ? (
+                comments.map((comment, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      minHeight: '40px',
+                      height: '100%',
+                      borderStyle: 'solid',
+                      marginBottom: '10px',
+                      borderWidth: '1px',
+                      borderColor: '#f5bf42',
+                    }}
+                  >
+                    <strong>{comment.user.name}:</strong> <span>{comment.content}</span>
+                  </div>
+                ))
+              ) : (
+                <p style={{ textAlign: 'center', color: '#888' }}>No comments yet.</p>
+              )}
+            </div>
+          </section>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
             <Button type="primary" onClick={handleSubmit} style={{ width: '30%' }}>
               {heading}
             </Button>

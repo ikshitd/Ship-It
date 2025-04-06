@@ -24,7 +24,16 @@ export default function Login() {
     if (isError) toast.error(message);
     setFormData(defaultFormValues);
     dispatch(reset());
-  }, [user, isError, isLoading, isSuccess, message, navigate, dispatch]);
+  }, [user, isError, isLoading, message, navigate, dispatch]);
+
+  useEffect(() => {
+    if (isSuccess || user) {
+      setTimeout(() => {
+        navigate('/');
+        window.location.reload(); // need to find some way to fix this small issue //
+      }, 0);
+    }
+  }, [isSuccess, user]);
 
   function onChange(e) {
     setFormData((prevState) => ({
@@ -40,13 +49,7 @@ export default function Login() {
       email,
       password,
     };
-    await dispatch(login(userData));
-    if (isSuccess || user) {
-      setTimeout(() => {
-        navigate('/');
-        window.location.reload(); // need to find some way to fix this small issue //
-      }, 0);
-    }
+    dispatch(login(userData));
   }
 
   return (
