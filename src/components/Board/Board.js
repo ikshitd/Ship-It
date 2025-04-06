@@ -5,7 +5,7 @@ import { Button } from 'antd';
 import Task from './Task.js';
 import socket from '../../socket/socket.js';
 import TaskDetails from '../TaskDetails.js';
-import { addTask } from '../../redux/slices/boardSlice.js';
+import { addTask, updateTask } from '../../redux/slices/boardSlice.js';
 
 export default function Board() {
   const { userId } = useSelector((state) => state.board);
@@ -81,6 +81,9 @@ export default function Board() {
 
   useEffect(() => {
     socket.on('taskMoved', (updatedTask) => {
+      // MOVING A TASK IS TREATED SIMILAR TO `TASK-UPDATE`
+      // JUST THE `TASK-CATEGORY` CHANGES.
+      dispatch(updateTask({ boardId: board.id, taskId: updatedTask.id, updatedTaskDetails: updatedTask }));
       setTasks((prevTasks) => {
         const updatedTasks = { ...prevTasks };
         Object.keys(updatedTasks).forEach((category) => {
