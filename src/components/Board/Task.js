@@ -63,7 +63,7 @@ export default function Task({ board, columnId, taskId, task }) {
       className="task-card"
     >
       <div className="task-heading">
-        <p style={{ fontSize: '15px' }}> {task.heading} </p>
+        <p style={{ fontSize: '13px' }}> {task.heading} </p>
       </div>
       <div className="task-details">
         {task.assigneeId != null ? (
@@ -71,7 +71,7 @@ export default function Task({ board, columnId, taskId, task }) {
         ) : null}
         <div>
           {task.startDate != null && task.dueDate != null ? (
-            <div style={{ fontSize: '15px', marginTop: '3px', marginBottom: '10px' }}>
+            <div style={{ fontSize: '13px', marginTop: '3px', marginBottom: '10px' }}>
               {startDate} {startMonth}- {endDate} {endMonth}{' '}
             </div>
           ) : null}
@@ -79,7 +79,7 @@ export default function Task({ board, columnId, taskId, task }) {
         {task.priority != null ? (
           <Tag
             style={{
-              fontSize: '13px',
+              fontSize: '12px',
               justifyContent: 'center',
               textAlign: 'center',
               height: '25px',
@@ -93,7 +93,7 @@ export default function Task({ board, columnId, taskId, task }) {
         {task.status != null ? (
           <Tag
             style={{
-              fontSize: '13px',
+              fontSize: '12px',
               justifyContent: 'center',
               textAlign: 'center',
               height: '25px',

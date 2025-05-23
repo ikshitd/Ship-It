@@ -92,7 +92,6 @@ export const authSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(fetchUserDetails.fulfilled, (state, action) => {
-        console.log(action.payload.user);
         state.isLoading = false;
         state.user = action.payload.user;
       })

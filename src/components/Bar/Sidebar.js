@@ -5,21 +5,28 @@ import { PlusOutlined, TeamOutlined, AppstoreOutlined } from '@ant-design/icons'
 import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 import socket from '../../socket/socket.js';
 import { setCurrentBoardId, fetchUsers, addBoard, setSelectedBoard } from '../../redux/slices/boardSlice.js';
+import { setSelectedProjectCanvas, addProjectCanvas } from '../../redux/slices/canvasSlice.js';
 
 export default function Sidebar() {
   const { Sider } = Layout;
-  const { boards, users, currentBoardId } = useSelector((state) => state.board);
+  const { userId, boards, users, currentBoardId } = useSelector((state) => state.board);
+  const { projectCanvases, selectedProjectCanvas } = useSelector((state) => state.canvas);
   const [newUser, setNewUser] = useState(''); // right now, [newUser = username], but will decide if it has to be {userId, userName}
   const [newBoardName, setNewBoardName] = useState('');
+  const [newCanvasName, setNewCanvasName] = useState('');
   const [isAddBoardModalVisible, setisAddBoardModalVisible] = useState(false);
   const [isAddUserModalVisible, setisAddUserModalVisible] = useState(false);
+  const [isAddCanvasModalVisible, setIsAddCanvasModalVisible] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (currentBoardId) dispatch(fetchUsers(currentBoardId));
+    socket.on('canvasAdded', () => {});
+    // JUST LISTEN FOR THE EVENT FOR NOW.
+    // DOESN'T REQUIRE ANYTHING ELSE TO DO FOR NOW.
   }, [currentBoardId, dispatch]);
 
-  const menuItems = boards.map((board) => ({
+  const boardItems = boards.map((board) => ({
     key: board.id.toString(),
     label: board.name,
     icon: <AppstoreOutlined />,
@@ -27,11 +34,27 @@ export default function Sidebar() {
     onClick: () => handleMenuClick({ key: board.id.toString(), board: board }),
   }));
 
+  const canvasItems = projectCanvases.map((canvas) => ({
+    key: canvas.id.toString(),
+    label: canvas.name,
+    icon: <AppstoreOutlined />,
+    className: 'custom-menu-item',
+    onClick: () => handleCanvasOnClick({ canvas: canvas }),
+  }));
+
   const handleMenuClick = ({ key, board }) => {
     dispatch(setCurrentBoardId(parseInt(key, 10)));
     dispatch(setSelectedBoard(board));
     socket.emit('boardSelected', {
       boardId: parseInt(key),
+    });
+  };
+
+  const handleCanvasOnClick = ({ canvas }) => {
+    dispatch(setSelectedProjectCanvas(canvas));
+    // IMPLEMENT THIS ON THE SERVER-SIDE.
+    socket.emit('canvasSelected', {
+      canvas: canvas,
     });
   };
 
@@ -43,6 +66,24 @@ export default function Sidebar() {
     } finally {
       setNewBoardName('');
       setisAddBoardModalVisible(false);
+    }
+  };
+
+  const handleAddCanvasModalOk = async () => {
+    try {
+      const addCanvasDetails = {
+        userId: userId,
+        canvasName: newCanvasName,
+      };
+      const addedCanvas = await dispatch(addProjectCanvas(addCanvasDetails)).unwrap().projectCanvas;
+      socket.emit('canvasAdded', {
+        addedCanvas: addedCanvas,
+      });
+    } catch (err) {
+      console.log(`Failed to create canvas: `, err);
+    } finally {
+      setNewCanvasName('');
+      setIsAddCanvasModalVisible(false);
     }
   };
 
@@ -67,6 +108,34 @@ export default function Sidebar() {
                 marginLeft: '10%',
               }}
             >
+              {'Canvas'}
+            </h1>
+            <PlusOutlined onClick={() => setIsAddCanvasModalVisible(true)} style={{ marginRight: '10%' }} />
+          </div>
+        </div>
+        {projectCanvases.length > 0 ? (
+          <Menu
+            theme="light"
+            mode="vertical"
+            selectedKeys={[selectedProjectCanvas?.toString()]}
+            items={canvasItems}
+            style={{
+              fontSize: '13px',
+              backgroundColor: '#ccdcff',
+            }}
+          />
+        ) : (
+          <div className="px-4 text-gray-500 text-center">No canvas available.</div>
+        )}
+        <div>
+          <div style={{ justifyContent: 'space-between' }} className="flex items-center justify-between mb-4">
+            <h1
+              style={{
+                color: 'black',
+                fontWeight: 'bold',
+                marginLeft: '10%',
+              }}
+            >
               {'Boards'}
             </h1>
             <PlusOutlined onClick={() => setisAddBoardModalVisible(true)} style={{ marginRight: '10%' }} />
@@ -77,7 +146,7 @@ export default function Sidebar() {
             theme="light"
             mode="vertical"
             selectedKeys={[currentBoardId?.toString()]}
-            items={menuItems}
+            items={boardItems}
             style={{
               fontSize: '13px',
               backgroundColor: '#ccdcff',
@@ -169,6 +238,28 @@ export default function Sidebar() {
           onChange={(e) => setNewBoardName(e.target.value)}
           onPressEnter={() => {
             if (newBoardName.trim()) handleAddBoardModalOk();
+          }}
+        />
+      </Modal>
+      <Modal
+        title="Add New Canvas"
+        open={isAddCanvasModalVisible}
+        onOk={handleAddCanvasModalOk}
+        onCancel={() => {
+          setNewCanvasName('');
+          setIsAddCanvasModalVisible(false);
+        }}
+        okButtonProps={{ disabled: !newCanvasName.trim() }}
+        // confirmLoading={isLoading}
+      >
+        <Input
+          placeholder="Enter canvas name"
+          value={newCanvasName}
+          onChange={(e) => {
+            setNewCanvasName(e.target.value);
+          }}
+          onPressEnter={() => {
+            if (newCanvasName.trim()) handleAddCanvasModalOk();
           }}
         />
       </Modal>

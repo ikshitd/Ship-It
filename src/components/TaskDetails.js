@@ -22,12 +22,12 @@ export default function TaskDetails({
 
   const fetchAndLoadComments = async () => {
     const response = await dispatch(fetchComments(taskId)).unwrap();
-    setComments(response);
-    console.log('comments: ', comments);
+    const sortedComments = [...response].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    setComments(sortedComments);
   };
 
   useEffect(() => {
-    if (isDrawerVisible) {
+    if (isDrawerVisible && heading === 'Update Task') {
       fetchAndLoadComments();
     }
   }, [isDrawerVisible]);
@@ -162,7 +162,13 @@ export default function TaskDetails({
                       borderColor: '#f5bf42',
                     }}
                   >
-                    <strong>{comment.user.name}:</strong> <span>{comment.content}</span>
+                    <div>
+                      <p>
+                        <strong> {comment.user.name} </strong>
+                        <span style={{ color: '#333' }}>{new Date(comment.createdAt).toLocaleString()}</span>
+                      </p>
+                    </div>
+                    <p style={{ color: '#444' }}>{comment.content}</p>
                   </div>
                 ))
               ) : (

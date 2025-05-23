@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run cpp",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-std=c++20",
+        "${file}",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}",
+        "&&",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$gcc"],
+      "detail": "Compile and run C++"
+    }
+  ]
+}

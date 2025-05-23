@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchBoards } from '../../redux/slices/boardSlice.js';
 import { fetchUserDetails } from '../../redux/slices/authSlice.js';
+import { fetchProjectCanvases } from '../../redux/slices/canvasSlice.js';
 import Sidebar from '../Bar/Sidebar.js';
 import Board from '../Board/Board.js';
-import Chatbar from '../Chat/Chatbar.js';
 import LoginPrompt from '../LoginPrompt.js';
+import ProjectCanvas from '../Project/ProjectCanvas.js';
 
 export default function Home() {
   const { userId, selectedBoard } = useSelector((state) => state.board);
@@ -17,6 +18,7 @@ export default function Home() {
   useEffect(() => {
     dispatch(fetchBoards());
     dispatch(fetchUserDetails(userId));
+    dispatch(fetchProjectCanvases(userId));
   }, [userId]);
 
   if (!userId) {
@@ -36,7 +38,7 @@ export default function Home() {
             </p>
           )}
         </Content>
-        <Chatbar />
+        <ProjectCanvas />
       </Layout>
     </Layout>
   );

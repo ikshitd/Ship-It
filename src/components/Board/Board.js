@@ -81,8 +81,6 @@ export default function Board() {
 
   useEffect(() => {
     socket.on('taskMoved', (updatedTask) => {
-      // MOVING A TASK IS TREATED SIMILAR TO `TASK-UPDATE`
-      // JUST THE `TASK-CATEGORY` CHANGES.
       dispatch(updateTask({ boardId: board.id, taskId: updatedTask.id, updatedTaskDetails: updatedTask }));
       setTasks((prevTasks) => {
         const updatedTasks = { ...prevTasks };
@@ -212,7 +210,7 @@ export default function Board() {
                         className="section-header"
                         style={{ position: 'sticky', top: '0', backgroundColor: '#fff', zIndex: '2' }}
                       >
-                        <h3 className="section-heading"> {columnId.replace('_', ' ')} </h3>
+                        <p className="section-heading"> {columnId.replace('_', ' ')} </p>
                         <Button
                           style={{ fontSize: '13px' }}
                           type="secondary"
@@ -222,7 +220,7 @@ export default function Board() {
                             setDrawerVisible(true);
                           }}
                         >
-                          Add Task
+                          Add
                         </Button>
                       </div>
                       <div style={{ minHeight: '100px' }}>

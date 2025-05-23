@@ -22,6 +22,7 @@ const io = new Server(httpServer, {
   },
 });
 
+// SERVER-SIDE SOCKET EVENT HANDLING //
 io.on('connection', (socket) => {
   console.log('A user is connected with the id: ', socket.id);
   socket.on('joinBoard', (boardId) => {
@@ -40,27 +41,24 @@ io.on('connection', (socket) => {
       console.error('Error updating task category:', err);
     }
   });
-
   socket.on('taskUpdated', (data) => {
     io.emit('taskUpdated', data);
   });
-
   socket.on('taskAdded', (data) => {
     io.emit('taskAdded', data);
   });
-
   socket.on('taskRemoved', (data) => {
     io.emit('taskRemoved', data);
   });
-
   socket.on('boardAdded', (data) => {
     io.emit('boardAdded', data);
   });
-
   socket.on('boardSelected', (data) => {
     io.emit('boardSelected', data);
   });
-
+  socket.on('canvasAdded', (data) => {
+    io.emit('canvasAdded', data);
+  });
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -391,6 +389,138 @@ app.post('/add-comment', authenticate, async (req, res) => {
     },
   });
   res.status(200).json({ message: 'Comment added successfully ', addedComment });
+});
+
+// ============= NODES AND EDGES (PROJECT-CANVAS) =============
+app.get('/get-all-project-canvases', authenticate, async (req, res) => {
+  try {
+    const projectCanvases = await prisma.projectCanvas.findMany();
+    return res.status(200).send(projectCanvases);
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+});
+
+app.get('/get-project-canvases', authenticate, async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId);
+    if (!userId) {
+      return res.status(500).json({ error: 'Missing userId fields.' });
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        projectCanvases: {
+          include: {
+            nodes: true,
+            edges: true,
+          },
+        },
+      },
+    });
+    if (!user) {
+      return res.status(500).json({ error: 'User not found.' });
+    }
+    return res.json(user.projectCanvases);
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+});
+
+app.post('/add-project-canvas', async (req, res) => {
+  try {
+    const { userId, name } = req.body;
+    if (!userId || !name) {
+      return res.status(500).json({ error: 'Missing input fields.' });
+    }
+    const addedProjectCanvas = await prisma.projectCanvas.create({
+      data: {
+        name,
+        users: {
+          connect: { id: userId },
+        },
+      },
+    });
+    res
+      .status(200)
+      .json({ projectCanvas: addedProjectCanvas, message: 'New project canvas added successfully.' });
+  } catch (err) {
+    return res.status(500).json({ error: err });
+  }
+});
+
+app.get('/get-nodes', authenticate, async (req, res) => {
+  const nodes = await prisma.node.findMany();
+  return res.status(200).send(nodes);
+});
+
+app.get('/get-edges', authenticate, async (req, res) => {
+  const edges = await prisma.edge.findMany();
+  res.status(200).send(edges);
+});
+
+app.post('/add-node', authenticate, async (req, res) => {
+  const { projectCanvasId, heading, description, priority, x, y, type } = req.body;
+  try {
+    const addedNode = await prisma.node.create({
+      data: {
+        heading,
+        description,
+        priority,
+        x,
+        y,
+        type,
+        projectCanvasId,
+      },
+    });
+    res.status(200).json({ node: addedNode, message: 'Node added successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while adding the node' });
+  }
+});
+
+app.post('/add-edge', authenticate, async (req, res) => {
+  const { source, target, animated, label, type, projectCanvasId } = req.body;
+  try {
+    const addedEdge = await prisma.edge.create({
+      data: {
+        source: source,
+        target: target,
+        animated: animated,
+        label: label,
+        type: type,
+        projectCanvasId: projectCanvasId,
+      },
+    });
+    return res.status(200).json({ edge: addedEdge, message: 'Added the edge successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: 'An error occurred while adding the edge' });
+  }
+});
+
+app.post('/update-edge', authenticate, async (req, res) => {
+  try {
+    const { edgeDetails } = req.body;
+    const { id, source, target, animated, label, type, projectCanvasId } = edgeDetails;
+    const canvas = await prisma.projectCanvas.findUnique({ where: { id: edgeDetails.projectCanvasId } });
+    if (!canvas) {
+      res.status(500).send('Canvas not found.');
+    }
+    const updatedEdge = await prisma.edge.update({
+      where: { id },
+      data: {
+        source: source,
+        target: target,
+        animated: animated,
+        label: label,
+        type: type,
+        projectCanvasId: projectCanvasId,
+      },
+    });
+    res.status(200).json({ edge: updatedEdge, message: 'Successfully updated the edgeDetails' });
+  } catch (err) {
+    res.status(500).json({ error: err, message: 'Failed to update the edge details.' });
+  }
 });
 
 httpServer.listen(PORT, () => {

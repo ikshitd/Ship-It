@@ -48,7 +48,7 @@ export default function Chatbar() {
   return (
     <Sider
       // width="40%"
-      width="35%"
+      width="40%"
       theme="light"
       style={{
         backgroundColor: '#fff',
