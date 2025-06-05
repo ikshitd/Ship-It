@@ -1,8 +1,3 @@
-## TODO
-
-- ### Frontend
-  - To figure out the working of socket.io and redux via the middlewares for real-time updates on all open sessions.
-
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
