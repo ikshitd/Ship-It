@@ -8,6 +8,8 @@
     "@heroui/react": "^2.7.4",
     "@lottiefiles/dotlottie-react": "^0.13.1",
     "@prisma/client": "^6.2.1",
+    "@react-email/components": "^0.0.41",
+    "@react-email/render": "^1.1.2",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.6.0",
     "@sweetalert/with-react": "^0.1.1",
@@ -35,11 +37,13 @@
     "react-beautiful-dnd": "^13.1.1",
     "react-datepicker": "^7.6.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
     "react-search-autocomplete": "^8.5.2",
     "react-toastify": "^11.0.5",
     "redux": "^5.0.1",
+    "resend": "^4.5.1",
     "shadcn": "^2.1.8",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
@@ -55,6 +59,7 @@
     "eject": "react-scripts eject",
     "clean": "rimraf build",
     "devbackend": "cd src/server && nodemon server.js",
+    "devmessagebackend": "cd src/server && nodemon messageServer.js",
     "dev": "concurrently \"yarn start\" \"yarn run-server\""
   },
   "eslintConfig": {
@@ -96,6 +101,7 @@
     "prettier": "^3.4.2",
     "pretty-quick": "^4.0.0",
     "prisma": "^6.2.1",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.4"
   }
 }

@@ -43,6 +43,14 @@ export const addBoard = createAsyncThunk('board/addBoard', async (boardName, thu
 });
 
 // ================= Task Updates ================= //
+export const fetchTask = createAsyncThunk('board/fetchTask', async (taskId, thunkAPI) => {
+  try {
+    return await boardService.fetchTask(taskId);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
 export const addTask = createAsyncThunk('board/addTask', async (addTaskDetails, thunkAPI) => {
   const { userId, boardId, category, updatedTaskDetails } = addTaskDetails;
   try {
@@ -74,6 +82,14 @@ export const removeTask = createAsyncThunk('board/removeTask', async (taskDetail
 export const fetchComments = createAsyncThunk('board/task/fetchComments', async (taskId, thunkAPI) => {
   try {
     return await boardService.fetchComments(taskId);
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response.data.error);
+  }
+});
+
+export const addComment = createAsyncThunk('board/task/addComment', async (commentDetails, thunkAPI) => {
+  try {
+    return await boardService.addComment(commentDetails);
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response.data.error);
   }
@@ -173,6 +189,16 @@ export const boardSlice = createSlice({
         );
       })
       .addCase(updateTask.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(addComment.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addComment.rejected, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(addComment.fulfilled, (state, action) => {
+        console.log(action.payload);
         state.isLoading = false;
       });
   },

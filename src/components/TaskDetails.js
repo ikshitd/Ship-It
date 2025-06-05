@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Button, Select, Input, Drawer, DatePicker, Divider } from 'antd';
 import dayjs from 'dayjs';
-import { fetchComments } from '../redux/slices/boardSlice.js';
+import { addComment, fetchComments, fetchTask } from '../redux/slices/boardSlice.js';
+import { useSelector } from 'react-redux';
+import ReactMarkdown from 'react-markdown';
 
 export default function TaskDetails({
   taskId,
@@ -16,7 +18,10 @@ export default function TaskDetails({
   handleSubmit,
   removeTask,
 }) {
+  const { userId } = useSelector((state) => state.board);
   const [comments, setComments] = useState([]);
+  const [aiGeneratedResponse, setAIGeneratedResponse] = useState(null);
+  const [commentText, setCommentText] = useState('');
   const { Option } = Select;
   const dispatch = useDispatch();
 
@@ -26,9 +31,27 @@ export default function TaskDetails({
     setComments(sortedComments);
   };
 
+  const fetchAIGeneratedResponse = async () => {
+    const taskDetails = await dispatch(fetchTask(taskId)).unwrap();
+    setAIGeneratedResponse(taskDetails.aiGeneratedResponse);
+  };
+
+  const handlePostComment = async () => {
+    try {
+      const addedComment = await dispatch(
+        addComment({ content: commentText, taskId: taskId, userId: userId })
+      ).unwrap();
+      setComments((prevComments) => [addedComment, ...prevComments]);
+    } catch (err) {
+      console.error('Failed to post comment:', err);
+    }
+    setCommentText('');
+  };
+
   useEffect(() => {
     if (isDrawerVisible && heading === 'Update Task') {
       fetchAndLoadComments();
+      fetchAIGeneratedResponse();
     }
   }, [isDrawerVisible]);
 
@@ -114,15 +137,10 @@ export default function TaskDetails({
           </section>
           <section style={{ marginBottom: '30px' }}>
             <h3 style={{ marginBottom: '16px', color: '#4a4a4a', textAlign: 'left' }}>Task Description</h3>
-            <textarea
+            <Input.TextArea
               value={updatedTaskDetails.description}
               onChange={async (e) => {
                 handleInputChange('description', e.target.value);
-                // const res = await axios.post('http://localhost:11434/api/generate', {
-                //   model: 'smollm:135m',
-                //   prompt: e.target.value,
-                //   stream: false,
-                // });
               }}
               placeholder="Enter task description..."
               style={{
@@ -138,46 +156,148 @@ export default function TaskDetails({
               }}
             />
           </section>
-          <Divider> COMMENTS </Divider>
-          <section style={{ marginBottom: '30px' }}>
-            <div
-              style={{
-                maxHeight: '200px',
-                overflowY: 'auto',
-                backgroundColor: '#f9f9f9',
-                padding: '10px',
-                borderRadius: '8px',
-              }}
-            >
-              {comments.length > 0 ? (
-                comments.map((comment, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      minHeight: '40px',
-                      height: '100%',
-                      borderStyle: 'solid',
-                      marginBottom: '10px',
-                      borderWidth: '1px',
-                      borderColor: '#f5bf42',
-                    }}
-                  >
-                    <div>
-                      <p>
-                        <strong> {comment.user.name} </strong>
-                        <span style={{ color: '#333' }}>{new Date(comment.createdAt).toLocaleString()}</span>
+          {heading === 'Update Task' && aiGeneratedResponse && (
+            <section style={{ marginBottom: '30px' }}>
+              <div
+                style={{
+                  padding: '12px',
+                  backgroundColor: '#f0f5ff',
+                  border: '1px solid #d6e4ff',
+                  borderRadius: '8px',
+                  color: '#1f1f1f',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  overflowWrap: 'break-word',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'inline-block',
+                    marginBottom: '12px',
+                    padding: '2px 10px',
+                    background: 'linear-gradient(90deg, #a1c4fd, #c2e9fb, #fbc7a4, #fcd9f7, #d4fc79)',
+                    color: '#333',
+                    fontSize: '12px',
+                    borderRadius: '12px',
+                    fontWeight: '600',
+                    userSelect: 'none',
+                    boxShadow: '0 0 8px rgba(180, 180, 180, 0.2)',
+                  }}
+                >
+                  AI Generated
+                </span>
+                <ReactMarkdown>{aiGeneratedResponse}</ReactMarkdown>
+              </div>
+            </section>
+          )}
+          {heading === 'Update Task' ? (
+            <section style={{ marginBottom: '30px' }}>
+              <Divider>COMMENTS</Divider>
+              <div style={{ marginBottom: '16px' }}>
+                <Input.TextArea
+                  placeholder="Write a comment..."
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  style={{
+                    width: '100%',
+                    height: '80px',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #d1d5db', // soft gray border
+                    resize: 'none',
+                    marginBottom: '12px',
+                    fontSize: '14px',
+                    fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+                    backgroundColor: '#fafafa',
+                  }}
+                />
+                <Button
+                  type="primary"
+                  onClick={handlePostComment}
+                  disabled={!commentText.trim()}
+                  style={{
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Post Comment
+                </Button>
+              </div>
+              <div
+                style={{
+                  maxHeight: '250px',
+                  overflowY: 'auto',
+                  paddingRight: '8px',
+                  border: '1px solid #e5e7eb', // subtle border around whole comment container
+                  borderRadius: '8px',
+                  padding: '12px',
+                  backgroundColor: '#fff', // optional: white bg for contrast
+                  boxShadow: '0 1px 3px rgb(0 0 0 / 0.1)', // subtle shadow for premium feel
+                }}
+              >
+                {comments.length > 0 ? (
+                  comments.map((comment, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        borderBottom: '1px solid #e5e7eb', // light bottom border between comments
+                        padding: '12px 0',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          marginBottom: '6px',
+                          fontSize: '13px',
+                          color: '#4b5563',
+                          fontWeight: '600',
+                          fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+                        }}
+                      >
+                        <span>{comment.user.name}</span>
+                        <span>{new Date(comment.createdAt).toLocaleString()}</span>
+                      </div>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '14px',
+                          color: '#111827',
+                          lineHeight: '1.5',
+                          fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {comment.content}
                       </p>
                     </div>
-                    <p style={{ color: '#444' }}>{comment.content}</p>
-                  </div>
-                ))
-              ) : (
-                <p style={{ textAlign: 'center', color: '#888' }}>No comments yet.</p>
-              )}
-            </div>
-          </section>
+                  ))
+                ) : (
+                  <p
+                    style={{
+                      textAlign: 'center',
+                      color: '#9ca3af',
+                      fontStyle: 'italic',
+                      fontSize: '14px',
+                    }}
+                  >
+                    No comments yet.
+                  </p>
+                )}
+              </div>
+            </section>
+          ) : null}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-            <Button type="primary" onClick={handleSubmit} style={{ width: '30%' }}>
+            <Button
+              type="primary"
+              onClick={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              style={{ width: '30%' }}
+            >
               {heading}
             </Button>
             {heading === 'Update Task' ? (

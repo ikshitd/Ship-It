@@ -16,6 +16,7 @@ import { Button } from 'antd';
 import { SaveOutlined, PlusCircleOutlined } from '@ant-design/icons';
 import CustomEdge from './CustomComponents/CustomEdge.js';
 import { addNode, addEdge as addEDGE } from '../../redux/slices/canvasSlice.js';
+import NodeDetailsModal from './CustomComponents/NodeDetailsModal.js';
 
 const nodeTypes = {
   customNode: CustomNode,
@@ -30,7 +31,7 @@ node: {
     id: '1',
     data: { heading: 'User logs in', description: 'As a user, I want to log in securely.', priority: 'Low' },
     position: { x: 10, y: 10 },
-    type: 'customNode',
+    type: 'customNode'
   },
 edge: {
     id: '1.2.3.4.',
@@ -55,6 +56,9 @@ export default function Project() {
   const [edges, setEdges] = useState([]);
   const [nodeCounter, setNodeCounter] = useState(0);
   // const { setCenter } = useReactFlow();
+  // for the customNodeModal visualization.
+  const [selectedNode, setSelectedNode] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
   const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
@@ -123,6 +127,11 @@ export default function Project() {
     // });
   };
 
+  const handleNodeClick = (nodeData) => {
+    setSelectedNode(nodeData);
+    setIsModalVisible(true);
+  };
+
   return (
     <Sider width="50%" style={{ height: '100%', position: 'relative' }}>
       {!selectedProjectCanvas ? (
@@ -132,7 +141,13 @@ export default function Project() {
         </div>
       ) : (
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map((node) => ({
+            ...node,
+            data: {
+              ...node.data,
+              onClick: () => handleNodeClick(node.data),
+            },
+          }))}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -168,14 +183,14 @@ export default function Project() {
               <Button onClick={handleAddNode} size="small">
                 <PlusCircleOutlined />
               </Button>
-              <Button
+              <button
                 onClick={() => {
                   console.log('REMOVE THIS LATER AND WRITE THE LOGIC TO STORE THINGS IN THE DB.');
                 }}
                 size="small"
               >
                 <SaveOutlined />
-              </Button>
+              </button>
               <Controls
                 showInteractive={false}
                 style={{
@@ -191,6 +206,18 @@ export default function Project() {
           <Background style={{ backgroundColor: 'white' }} />
         </ReactFlow>
       )}
+      {selectedNode !== null && isModalVisible === true ? (
+        <NodeDetailsModal
+          visible={isModalVisible}
+          nodeData={selectedNode}
+          onClose={() => setIsModalVisible(false)}
+          onUpdate={(updatedNodeData) => {
+            // Optional: update the node in local state or dispatch Redux action
+            console.log('Updated node data:', updatedNodeData);
+            setIsModalVisible(false);
+          }}
+        />
+      ) : null}
     </Sider>
   );
 }

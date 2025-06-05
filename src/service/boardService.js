@@ -31,6 +31,15 @@ const addBoard = async (userId, boardName) => {
   return response.data.board;
 };
 
+const fetchTask = async (taskId) => {
+  const response = await axios.get(`http://localhost:3001/fetch-task?taskId=${taskId}`, {
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
+    },
+  });
+  return response.data.task;
+};
+
 const addTask = async (userId, boardId, category, updatedTaskDetails) => {
   const response = await axios.post(
     'http://localhost:3001/add-task',
@@ -88,16 +97,35 @@ const fetchComments = async (taskId) => {
   return response.data.comments;
 };
 
+const addComment = async (commentDetails) => {
+  const { content, taskId, userId } = commentDetails;
+  const token = sessionStorage.getItem('authToken');
+  const response = await axios.post(
+    `http://localhost:3001/add-comment`,
+    {
+      content,
+      taskId,
+      userId,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data.addedComment;
+};
+
 const boardService = {
   fetchBoards,
   fetchUsers,
   addBoard,
 
+  fetchTask,
   addTask,
   updateTask,
   removeTask,
 
   fetchComments,
+  addComment,
 };
 
 export default boardService;

@@ -11,7 +11,7 @@ export default function Sidebar() {
   const { Sider } = Layout;
   const { userId, boards, users, currentBoardId } = useSelector((state) => state.board);
   const { projectCanvases, selectedProjectCanvas } = useSelector((state) => state.canvas);
-  const [newUser, setNewUser] = useState(''); // right now, [newUser = username], but will decide if it has to be {userId, userName}
+  const [newUser, setNewUser] = useState('');
   const [newBoardName, setNewBoardName] = useState('');
   const [newCanvasName, setNewCanvasName] = useState('');
   const [isAddBoardModalVisible, setisAddBoardModalVisible] = useState(false);
@@ -22,8 +22,6 @@ export default function Sidebar() {
   useEffect(() => {
     if (currentBoardId) dispatch(fetchUsers(currentBoardId));
     socket.on('canvasAdded', () => {});
-    // JUST LISTEN FOR THE EVENT FOR NOW.
-    // DOESN'T REQUIRE ANYTHING ELSE TO DO FOR NOW.
   }, [currentBoardId, dispatch]);
 
   const boardItems = boards.map((board) => ({
@@ -52,7 +50,7 @@ export default function Sidebar() {
 
   const handleCanvasOnClick = ({ canvas }) => {
     dispatch(setSelectedProjectCanvas(canvas));
-    // IMPLEMENT THIS ON THE SERVER-SIDE.
+    // TO IMPLEMENT THIS ON THE SERVER-SIDE. //
     socket.emit('canvasSelected', {
       canvas: canvas,
     });
@@ -99,34 +97,7 @@ export default function Sidebar() {
           borderColor: 'black',
         }}
       >
-        <div>
-          <div style={{ justifyContent: 'space-between' }} className="flex items-center justify-between mb-4">
-            <h1
-              style={{
-                color: 'black',
-                fontWeight: 'bold',
-                marginLeft: '10%',
-              }}
-            >
-              {'Canvas'}
-            </h1>
-            <PlusOutlined onClick={() => setIsAddCanvasModalVisible(true)} style={{ marginRight: '10%' }} />
-          </div>
-        </div>
-        {projectCanvases.length > 0 ? (
-          <Menu
-            theme="light"
-            mode="vertical"
-            selectedKeys={[selectedProjectCanvas?.toString()]}
-            items={canvasItems}
-            style={{
-              fontSize: '13px',
-              backgroundColor: '#ccdcff',
-            }}
-          />
-        ) : (
-          <div className="px-4 text-gray-500 text-center">No canvas available.</div>
-        )}
+        {/* BOARDS SECTION */}
         <div>
           <div style={{ justifyContent: 'space-between' }} className="flex items-center justify-between mb-4">
             <h1
@@ -155,50 +126,76 @@ export default function Sidebar() {
         ) : (
           <div className="px-4 text-gray-500 text-center">No boards available.</div>
         )}
-        {
-          <>
-            <Divider />
-            <div>
-              <div style={{ justifyContent: 'space-between', display: 'flex' }}>
-                <h1
-                  style={{
-                    color: 'black',
-                    fontWeight: 'bold',
-                    marginLeft: '10%',
-                  }}
-                >
-                  Team Members
-                </h1>
-                <TeamOutlined
-                  onClick={() => {
-                    setisAddUserModalVisible(true);
-                  }}
-                  style={{ color: 'black', marginRight: '10%' }}
-                />
-              </div>
-              {users.length > 0 ? (
-                <List
-                  dataSource={users}
-                  renderItem={(user) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        style={{ height: '15px', marginLeft: '10%' }}
-                        avatar={
-                          <Avatar style={{ height: '20px', width: '20px' }}>
-                            {user.name.charAt(0).toUpperCase()}
-                          </Avatar>
-                        }
-                        title={user.name}
-                      />
-                    </List.Item>
-                  )}
-                />
-              ) : (
-                <div className="text-gray-500 text-center text-sm">No team members yet</div>
-              )}
+        <div>
+          <div style={{ justifyContent: 'space-between' }} className="flex items-center justify-between mb-4">
+            <h1
+              style={{
+                color: 'black',
+                fontWeight: 'bold',
+                marginLeft: '10%',
+              }}
+            >
+              {'Your Canvases'}
+            </h1>
+            <PlusOutlined onClick={() => setIsAddCanvasModalVisible(true)} style={{ marginRight: '10%' }} />
+          </div>
+        </div>
+        {projectCanvases.length > 0 ? (
+          <Menu
+            theme="light"
+            mode="vertical"
+            selectedKeys={[selectedProjectCanvas?.toString()]}
+            items={canvasItems}
+            style={{
+              fontSize: '13px',
+              backgroundColor: '#ccdcff',
+            }}
+          />
+        ) : (
+          <div className="px-4 text-gray-500 text-center">No canvas available.</div>
+        )}
+        <>
+          <Divider />
+          <div>
+            <div style={{ justifyContent: 'space-between', display: 'flex' }}>
+              <h1
+                style={{
+                  color: 'black',
+                  fontWeight: 'bold',
+                  marginLeft: '10%',
+                }}
+              >
+                Team Members
+              </h1>
+              <TeamOutlined
+                onClick={() => {
+                  setisAddUserModalVisible(true);
+                }}
+                style={{ color: 'black', marginRight: '10%' }}
+              />
             </div>
-          </>
-        }
+            {users.length > 0 ? (
+              <List
+                dataSource={users}
+                renderItem={(user) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      style={{ height: '15px', marginLeft: '10%' }}
+                      avatar={
+                        <Avatar style={{ height: '20px', width: '20px' }}>
+                          {user.name.charAt(0).toUpperCase()}
+                        </Avatar>
+                      }
+                      title={user.name}
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <div className="text-gray-500 text-center text-sm">No team members yet</div>
+            )}
+          </div>
+        </>
       </Sider>
       <Modal
         open={isAddUserModalVisible}
@@ -230,7 +227,6 @@ export default function Sidebar() {
           setisAddBoardModalVisible(false);
         }}
         okButtonProps={{ disabled: !newBoardName.trim() }}
-        // confirmLoading={isLoading}
       >
         <Input
           placeholder="Enter board name"
@@ -250,7 +246,6 @@ export default function Sidebar() {
           setIsAddCanvasModalVisible(false);
         }}
         okButtonProps={{ disabled: !newCanvasName.trim() }}
-        // confirmLoading={isLoading}
       >
         <Input
           placeholder="Enter canvas name"

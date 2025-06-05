@@ -6,6 +6,8 @@ import Task from './Task.js';
 import socket from '../../socket/socket.js';
 import TaskDetails from '../TaskDetails.js';
 import { addTask, updateTask } from '../../redux/slices/boardSlice.js';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 export default function Board() {
   const { userId } = useSelector((state) => state.board);
@@ -61,6 +63,11 @@ export default function Board() {
   }, [board]);
 
   const handleSubmit = async () => {
+    if (!updatedTaskDetails.description.trim()) {
+      setDrawerVisible(false);
+      toast.error('Please enter a task description before proceeding.');
+      return;
+    }
     const newTask = await dispatch(
       addTask({
         userId: userId,
@@ -69,6 +76,10 @@ export default function Board() {
         updatedTaskDetails: updatedTaskDetails,
       })
     ).unwrap();
+    // PUSHING THE AI-RESPONSE-GENERATION-EVENT IN THE QUEUE. //
+    await axios.post('http://localhost:4001/publish-generate-ai-response-event', {
+      taskDetails: newTask,
+    });
     setUpdatedTaskDetails(defaultTaskDetails);
     socket.emit('taskAdded', {
       userId: userId,
@@ -177,9 +188,9 @@ export default function Board() {
 
   return (
     <div>
-      {/* <p style={{ fontWeight: 'bold', fontSize: '15px', marginLeft: '1%' }}>
-        {board.name} : Created at : 10 March 2024{' '}
-      </p>{' '} */}
+      <p style={{ paddingLeft: '1%' }}>
+        <strong> {board.name} : Created at : 10 March 2025 </strong>{' '}
+      </p>{' '}
       <div>
         <DragDropContext
           onDragEnd={onDragEnd}

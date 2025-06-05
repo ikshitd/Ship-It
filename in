@@ -1,0 +1,1965 @@
+diff --git a/package.json b/package.json
+index 7b92759..9889b6f 100644
+--- a/package.json
++++ b/package.json
+@@ -8,6 +8,8 @@
+     "@heroui/react": "^2.7.4",
+     "@lottiefiles/dotlottie-react": "^0.13.1",
+     "@prisma/client": "^6.2.1",
++    "@react-email/components": "^0.0.41",
++    "@react-email/render": "^1.1.2",
+     "@react-oauth/google": "^0.12.1",
+     "@reduxjs/toolkit": "^2.6.0",
+     "@sweetalert/with-react": "^0.1.1",
+@@ -40,6 +42,7 @@
+     "react-search-autocomplete": "^8.5.2",
+     "react-toastify": "^11.0.5",
+     "redux": "^5.0.1",
++    "resend": "^4.5.1",
+     "shadcn": "^2.1.8",
+     "socket.io": "^4.8.1",
+     "socket.io-client": "^4.8.1",
+@@ -55,6 +58,7 @@
+     "eject": "react-scripts eject",
+     "clean": "rimraf build",
+     "devbackend": "cd src/server && nodemon server.js",
++    "devmessagebackend": "cd src/server && nodemon messageServer.js",
+     "dev": "concurrently \"yarn start\" \"yarn run-server\""
+   },
+   "eslintConfig": {
+@@ -96,6 +100,7 @@
+     "prettier": "^3.4.2",
+     "pretty-quick": "^4.0.0",
+     "prisma": "^6.2.1",
+-    "tailwindcss": "^3.4.17"
++    "tailwindcss": "^3.4.17",
++    "tsx": "^4.19.4"
+   }
+ }
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index 10ee890..cc91798 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -35,9 +35,12 @@ model Task {
+   status        Status
+   taskCategory  TaskCategory
+   assignee    String
++  aiGeneratedResponse String?
+   boardId       Int   
+   board         Board     @relation(fields: [boardId], references: [id])
+   comments      Comment[]
++  nodeId Int?
++  node   Node? @relation(fields: [nodeId], references: [id])
+ }
+ 
+ model Comment {
+@@ -70,6 +73,7 @@ model Node {
+   type        String
+   projectCanvasId Int
+   projectCanvas   ProjectCanvas @relation(fields: [projectCanvasId], references: [id])
++  tasks Task[]
+ }
+ 
+ model Edge {
+diff --git a/src/components/Bar/Sidebar.js b/src/components/Bar/Sidebar.js
+index 0f3739e..8b66cc2 100644
+--- a/src/components/Bar/Sidebar.js
++++ b/src/components/Bar/Sidebar.js
+@@ -108,7 +108,7 @@ export default function Sidebar() {
+                 marginLeft: '10%',
+               }}
+             >
+-              {'Canvas'}
++              {'Canvases'}
+             </h1>
+             <PlusOutlined onClick={() => setIsAddCanvasModalVisible(true)} style={{ marginRight: '10%' }} />
+           </div>
+diff --git a/src/components/Board/Board.js b/src/components/Board/Board.js
+index a209ba5..3c03822 100644
+--- a/src/components/Board/Board.js
++++ b/src/components/Board/Board.js
+@@ -6,6 +6,8 @@ import Task from './Task.js';
+ import socket from '../../socket/socket.js';
+ import TaskDetails from '../TaskDetails.js';
+ import { addTask, updateTask } from '../../redux/slices/boardSlice.js';
++import { toast } from 'react-toastify';
++import axios from 'axios';
+ 
+ export default function Board() {
+   const { userId } = useSelector((state) => state.board);
+@@ -36,6 +38,7 @@ export default function Board() {
+     status: 'Off_Risk',
+     description: '',
+     taskCategory: 'NOT_STARTED',
++    aiGeneratedResponse: '',
+   };
+ 
+   const [tasks, setTasks] = useState(propagateData(board));
+@@ -60,7 +63,17 @@ export default function Board() {
+     };
+   }, [board]);
+ 
++  // const performAddBoardOperation = async () => {
++  //   // lets' see what we can do here.
++  //   await axios.post('http://localhost:4001/publish-generate-ai-response-event');
++  // };
++
+   const handleSubmit = async () => {
++    if (!updatedTaskDetails.description.trim()) {
++      setDrawerVisible(false);
++      toast.error('Please enter a task description before proceeding.');
++      return;
++    }
+     const newTask = await dispatch(
+       addTask({
+         userId: userId,
+@@ -177,9 +190,9 @@ export default function Board() {
+ 
+   return (
+     <div>
+-      {/* <p style={{ fontWeight: 'bold', fontSize: '15px', marginLeft: '1%' }}>
+-        {board.name} : Created at : 10 March 2024{' '}
+-      </p>{' '} */}
++      <p style={{ paddingLeft: '1%' }}>
++        <strong> {board.name} : Created at : 10 March 2025 </strong>{' '}
++      </p>{' '}
+       <div>
+         <DragDropContext
+           onDragEnd={onDragEnd}
+diff --git a/src/components/Project/CustomComponents/CustomNode.js b/src/components/Project/CustomComponents/CustomNode.js
+index 74703e1..583cdbb 100644
+--- a/src/components/Project/CustomComponents/CustomNode.js
++++ b/src/components/Project/CustomComponents/CustomNode.js
+@@ -6,43 +6,28 @@ const handleStyle = { left: 10 };
+ 
+ export default function TextUpdaterNode({ data }) {
+   const [input, setInput] = useState(data);
+-  const [isLabelEditing, setIsLabelEditing] = useState(false);
+-  const [isDescriptionEditing, setIsDescriptionEditing] = useState(false);
+ 
+-  const handleInputChange = (field, value) => {
+-    setInput({ ...input, [field]: value });
+-  };
+-
+-  const handlePriorityChange = (value) => {
+-    handleInputChange('priority', value);
+-  };
+-
+-  const priorityOptions = ['High', 'Medium', 'Low'];
+   const priorityColors = {
+     High: '#ed3e3e',
+     Medium: '#f7cb2d',
+     Low: '#57bd5c',
+   };
+ 
+-  const menu = (
+-    <Menu
+-      onClick={({ key }) => handlePriorityChange(key)}
+-      items={priorityOptions.map((priority) => ({
+-        key: priority,
+-        label: priority,
+-      }))}
+-    />
+-  );
++  const statusColors = {
++    NOT_STARTED: '#d9d9d9',
++    IN_PROGRESS: '#1890ff',
++    BLOCKED: '#fa541c',
++    DONE: '#52c41a',
++  };
+ 
+   return (
+     <div
++      onClick={data.onClick}
+       style={{
+         padding: '10px',
+         height: '100%',
+         width: '100%',
+         maxWidth: '200px',
+-        // backgroundColor: 'rgb(204, 220, 255)',
+-        // FOR THE HIGHLIGHTED NODE. IF THIS DOESN'T WORK, THEN REMOVE THIS.
+         backgroundColor: data.highlighted ? '#fff1f0' : 'rgb(204, 220, 255)',
+         border: data.highlighted ? '3px solid #ff4d4f' : '1px solid #ccc',
+         color: 'black',
+@@ -52,54 +37,55 @@ export default function TextUpdaterNode({ data }) {
+       <Handle type="target" position={Position.Top} />
+       <div>
+         <section style={{ textAlign: 'center' }}>
+-          {isLabelEditing ? (
+-            <Input.TextArea
+-              value={input.heading}
+-              onChange={(e) => {
+-                handleInputChange('heading', e.target.value);
+-              }}
+-              style={{ backgroundColor: 'rgb(30, 30, 30)', color: 'white' }}
+-              onBlur={() => setIsLabelEditing(false)}
+-              autoFocus
+-            />
+-          ) : (
+-            <p onClick={() => setIsLabelEditing(true)}>
+-              <strong>{input.heading}</strong>
+-            </p>
+-          )}
++          <p>
++            <strong>{input.heading}</strong>
++          </p>
+         </section>
+ 
+         <section style={{ marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
+-          <Dropdown overlay={menu} trigger={['click']}>
+-            <Tag
+-              style={{
+-                fontSize: '13px',
+-                justifyContent: 'center',
+-                textAlign: 'center',
+-                height: '25px',
+-                width: '63px',
+-                cursor: 'pointer',
+-              }}
+-              color={priorityColors[input.priority]}
+-            >
+-              <div style={{ marginTop: '1px' }}>{input.priority}</div>
+-            </Tag>
+-          </Dropdown>
++          <Tag
++            style={{
++              fontSize: '13px',
++              justifyContent: 'center',
++              textAlign: 'center',
++              height: '25px',
++              width: '63px',
++              cursor: 'pointer',
++            }}
++            color={priorityColors[input.priority]}
++          >
++            <div style={{ marginTop: '1px' }}>{input.priority}</div>
++          </Tag>
+         </section>
+ 
+         <section style={{ textAlign: 'center' }}>
+-          {isDescriptionEditing ? (
+-            <Input.TextArea
+-              value={input.description}
+-              onChange={(e) => {
+-                handleInputChange('description', e.target.value);
+-              }}
+-              style={{ backgroundColor: 'rgb(30, 30, 30)', color: 'white' }}
+-              onBlur={() => setIsDescriptionEditing(false)}
+-              autoFocus
+-            />
++          <p>{input.description}</p>
++        </section>
++        <section style={{ maxHeight: '120px', overflowY: 'auto', marginTop: '10px' }}>
++          {input.tasks && input.tasks.length > 0 ? (
++            input.tasks.map((task) => (
++              <div
++                key={task.id}
++                style={{
++                  display: 'flex',
++                  alignItems: 'center',
++                  justifyContent: 'space-between',
++                  padding: '4px 6px',
++                  margin: '4px 0',
++                  background: '#fff',
++                  borderRadius: '4px',
++                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
++                  fontSize: '12px',
++                }}
++              >
++                <span>{task.title}</span>
++                <Tag color={statusColors[task.status]} style={{ marginLeft: '8px' }}>
++                  {task.status}
++                </Tag>
++              </div>
++            ))
+           ) : (
+-            <p onClick={() => setIsDescriptionEditing(true)}>{input.description}</p>
++            <div style={{ textAlign: 'center', fontSize: '12px', color: '#999' }}>No tasks</div>
+           )}
+         </section>
+       </div>
+diff --git a/src/components/Project/ProjectCanvas.js b/src/components/Project/ProjectCanvas.js
+index d4c7136..5a9168a 100644
+--- a/src/components/Project/ProjectCanvas.js
++++ b/src/components/Project/ProjectCanvas.js
+@@ -16,6 +16,7 @@ import { Button } from 'antd';
+ import { SaveOutlined, PlusCircleOutlined } from '@ant-design/icons';
+ import CustomEdge from './CustomComponents/CustomEdge.js';
+ import { addNode, addEdge as addEDGE } from '../../redux/slices/canvasSlice.js';
++import NodeDetailsModal from './CustomComponents/NodeDetailsModal.js';
+ 
+ const nodeTypes = {
+   customNode: CustomNode,
+@@ -30,7 +31,7 @@ node: {
+     id: '1',
+     data: { heading: 'User logs in', description: 'As a user, I want to log in securely.', priority: 'Low' },
+     position: { x: 10, y: 10 },
+-    type: 'customNode',
++    type: 'customNode'
+   },
+ edge: {
+     id: '1.2.3.4.',
+@@ -55,6 +56,9 @@ export default function Project() {
+   const [edges, setEdges] = useState([]);
+   const [nodeCounter, setNodeCounter] = useState(0);
+   // const { setCenter } = useReactFlow();
++  // for the customNodeModal visualization.
++  const [selectedNode, setSelectedNode] = useState(null);
++  const [isModalVisible, setIsModalVisible] = useState(false);
+ 
+   const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+   const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+@@ -123,6 +127,12 @@ export default function Project() {
+     // });
+   };
+ 
++  const handleNodeClick = (nodeData) => {
++    console.log('reaching here.....');
++    setSelectedNode(nodeData);
++    setIsModalVisible(true);
++  };
++
+   return (
+     <Sider width="50%" style={{ height: '100%', position: 'relative' }}>
+       {!selectedProjectCanvas ? (
+@@ -132,7 +142,13 @@ export default function Project() {
+         </div>
+       ) : (
+         <ReactFlow
+-          nodes={nodes}
++          nodes={nodes.map((node) => ({
++            ...node,
++            data: {
++              ...node.data,
++              onClick: () => handleNodeClick(node.data),
++            },
++          }))}
+           edges={edges}
+           onNodesChange={onNodesChange}
+           onEdgesChange={onEdgesChange}
+@@ -168,14 +184,14 @@ export default function Project() {
+               <Button onClick={handleAddNode} size="small">
+                 <PlusCircleOutlined />
+               </Button>
+-              <Button
++              <button
+                 onClick={() => {
+                   console.log('REMOVE THIS LATER AND WRITE THE LOGIC TO STORE THINGS IN THE DB.');
+                 }}
+                 size="small"
+               >
+                 <SaveOutlined />
+-              </Button>
++              </button>
+               <Controls
+                 showInteractive={false}
+                 style={{
+@@ -191,6 +207,18 @@ export default function Project() {
+           <Background style={{ backgroundColor: 'white' }} />
+         </ReactFlow>
+       )}
++      {selectedNode !== null && isModalVisible === true ? (
++        <NodeDetailsModal
++          visible={isModalVisible}
++          nodeData={selectedNode}
++          onClose={() => setIsModalVisible(false)}
++          onUpdate={(updatedNodeData) => {
++            // Optional: update the node in local state or dispatch Redux action
++            console.log('Updated node data:', updatedNodeData);
++            setIsModalVisible(false);
++          }}
++        />
++      ) : null}
+     </Sider>
+   );
+ }
+diff --git a/src/components/TaskDetails.js b/src/components/TaskDetails.js
+index 59c7c71..579504a 100644
+--- a/src/components/TaskDetails.js
++++ b/src/components/TaskDetails.js
+@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
+ import { useDispatch } from 'react-redux';
+ import { Button, Select, Input, Drawer, DatePicker, Divider } from 'antd';
+ import dayjs from 'dayjs';
+-import { fetchComments } from '../redux/slices/boardSlice.js';
++import { addComment, fetchComments } from '../redux/slices/boardSlice.js';
++import { useSelector } from 'react-redux';
+ 
+ export default function TaskDetails({
+   taskId,
+@@ -16,7 +17,9 @@ export default function TaskDetails({
+   handleSubmit,
+   removeTask,
+ }) {
++  const { userId } = useSelector((state) => state.board);
+   const [comments, setComments] = useState([]);
++  const [commentText, setCommentText] = useState('');
+   const { Option } = Select;
+   const dispatch = useDispatch();
+ 
+@@ -26,11 +29,24 @@ export default function TaskDetails({
+     setComments(sortedComments);
+   };
+ 
++  const handlePostComment = async () => {
++    try {
++      const addedComment = await dispatch(
++        addComment({ content: commentText, taskId: taskId, userId: userId })
++      ).unwrap();
++      setComments((prevComments) => [addedComment, ...prevComments]);
++    } catch (err) {
++      console.error('Failed to post comment:', err);
++    }
++    setCommentText('');
++  };
++
+   useEffect(() => {
+     if (isDrawerVisible && heading === 'Update Task') {
+       fetchAndLoadComments();
+     }
+   }, [isDrawerVisible]);
++  if (!updatedTaskDetails) return null;
+ 
+   return (
+     <Drawer
+@@ -42,7 +58,7 @@ export default function TaskDetails({
+       }}
+       closable={true}
+       open={isDrawerVisible}
+-      width="50%"
++      width="60%"
+       motion={{
+         motionAppear: true,
+       }}
+@@ -138,44 +154,69 @@ export default function TaskDetails({
+               }}
+             />
+           </section>
+-          <Divider> COMMENTS </Divider>
+-          <section style={{ marginBottom: '30px' }}>
+-            <div
+-              style={{
+-                maxHeight: '200px',
+-                overflowY: 'auto',
+-                backgroundColor: '#f9f9f9',
+-                padding: '10px',
+-                borderRadius: '8px',
+-              }}
+-            >
+-              {comments.length > 0 ? (
+-                comments.map((comment, index) => (
+-                  <div
+-                    key={index}
+-                    style={{
+-                      minHeight: '40px',
+-                      height: '100%',
+-                      borderStyle: 'solid',
+-                      marginBottom: '10px',
+-                      borderWidth: '1px',
+-                      borderColor: '#f5bf42',
+-                    }}
+-                  >
+-                    <div>
+-                      <p>
+-                        <strong> {comment.user.name} </strong>
+-                        <span style={{ color: '#333' }}>{new Date(comment.createdAt).toLocaleString()}</span>
+-                      </p>
++          {heading === 'Update Task' ? (
++            <section style={{ marginBottom: '30px' }}>
++              <Divider> COMMENTS </Divider>
++              <div style={{ marginBottom: '16px' }}>
++                <textarea
++                  placeholder="Write a comment..."
++                  value={commentText}
++                  onChange={(e) => {
++                    setCommentText(e.target.value);
++                  }}
++                  style={{
++                    width: '100%',
++                    height: '80px',
++                    padding: '8px',
++                    borderRadius: '6px',
++                    border: '1px solid #ccc',
++                    resize: 'none',
++                    marginBottom: '8px',
++                  }}
++                />
++                <Button type="primary" onClick={handlePostComment} disabled={!commentText.trim()}>
++                  Post Comment
++                </Button>
++              </div>
++              <div
++                style={{
++                  maxHeight: '200px',
++                  overflowY: 'auto',
++                  backgroundColor: '#f9f9f9',
++                  padding: '10px',
++                  borderRadius: '8px',
++                }}
++              >
++                {comments.length > 0 ? (
++                  comments.map((comment, index) => (
++                    <div
++                      key={index}
++                      style={{
++                        minHeight: '40px',
++                        height: '100%',
++                        borderStyle: 'solid',
++                        marginBottom: '10px',
++                        borderWidth: '1px',
++                        borderColor: '#f5bf42',
++                      }}
++                    >
++                      <div>
++                        <p>
++                          <strong> {comment.user.name} </strong>
++                          <span style={{ color: '#333' }}>
++                            {new Date(comment.createdAt).toLocaleString()}
++                          </span>
++                        </p>
++                      </div>
++                      <p style={{ color: '#444' }}>{comment.content}</p>
+                     </div>
+-                    <p style={{ color: '#444' }}>{comment.content}</p>
+-                  </div>
+-                ))
+-              ) : (
+-                <p style={{ textAlign: 'center', color: '#888' }}>No comments yet.</p>
+-              )}
+-            </div>
+-          </section>
++                  ))
++                ) : (
++                  <p style={{ textAlign: 'center', color: '#888' }}>No comments yet.</p>
++                )}
++              </div>
++            </section>
++          ) : null}
+           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
+             <Button type="primary" onClick={handleSubmit} style={{ width: '30%' }}>
+               {heading}
+diff --git a/src/index.css b/src/index.css
+index 1513cb8..a6ade90 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -203,23 +203,6 @@ button {
+   color: #2c2c2c;
+ }
+ 
+-.nameInput {
+-  margin-bottom: 2rem;
+-  background: url('./assets/svg/badgeIcon.svg') #ffffff 2.5% center no-repeat;
+-}
+-
+-.emailInput {
+-  margin-bottom: 2rem;
+-}
+-
+-.passwordInputDiv {
+-  position: relative;
+-}
+-
+-.passwordInput {
+-  margin-bottom: 2rem;
+-}
+-
+ .showPassword {
+   cursor: pointer;
+   position: absolute;
+@@ -228,623 +211,10 @@ button {
+   padding: 1rem;
+ }
+ 
+-.forgotPasswordLink {
+-  cursor: pointer;
+-  color: #00cc66;
+-  font-weight: 600;
+-  text-align: right;
+-}
+-
+-.signInBar,
+-.signUpBar {
+-  margin-top: 3rem;
+-  display: flex;
+-  justify-content: space-between;
+-  align-items: center;
+-  position: inherit;
+-}
+-
+-.signInButton,
+-.signUpButton,
+-.signInText,
+-.signUpText {
+-  cursor: pointer;
+-}
+-@media (min-width: 1024px) {
+-  .signInBar,
+-  .signUpBar {
+-    justify-content: start;
+-  }
+-}
+-
+-.signInText,
+-.signUpText {
+-  font-size: 1.5rem;
+-  font-weight: 700;
+-}
+-
+-.signInButton,
+-.signUpButton {
+-  display: flex;
+-  justify-content: center;
+-  align-items: center;
+-  width: 3rem;
+-  height: 3rem;
+-  background-color: #00cc66;
+-  border-radius: 50%;
+-}
+-@media (min-width: 1024px) {
+-  .signInButton,
+-  .signUpButton {
+-    margin-left: 3rem;
+-  }
+-}
+-
+-.socialLogin {
+-  margin-top: 4rem;
+-  display: flex;
+-  flex-direction: column;
+-  align-items: center;
+-}
+-
+-.socialIconDiv {
+-  cursor: pointer;
+-  display: flex;
+-  justify-content: center;
+-  align-items: center;
+-  padding: 0.75rem;
+-  margin: 1.5rem;
+-  width: 3rem;
+-  height: 3rem;
+-  background-color: #ffffff;
+-  border-radius: 50%;
+-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+-}
+-
+-.socialIconImg {
+-  width: 100%;
+-}
+-
+-.registerLink {
+-  margin-top: 4rem;
+-  color: #00cc66;
+-  font-weight: 600;
+-  text-align: center;
+-  margin-bottom: 3rem;
+-}
+-
+-@media (min-width: 1217px) {
+-  .explore {
+-    margin-bottom: 10rem;
+-  }
+-}
+-@media (max-height: 536px) {
+-  .explore {
+-    margin-bottom: 10rem;
+-  }
+-}
+-
+-.exploreHeading,
+-.exploreCategoryHeading {
+-  font-weight: 700;
+-}
+-
+-.exploreCategoryHeading {
+-  margin-top: 3rem;
+-}
+-
+-.swiper-container {
+-  min-height: 225px;
+-  height: 23vw;
+-}
+-
+-.swiper-pagination-bullet-active {
+-  background-color: #ffffff !important;
+-}
+-
+-.swiperSlideDiv {
+-  position: relative;
+-  width: 100%;
+-  height: 100%;
+-}
+-
+-.swiperSlideImg {
+-  width: 100%;
+-  object-fit: cover;
+-}
+-
+-.swiperSlideText {
+-  color: #ffffff;
+-  position: absolute;
+-  top: 70px;
+-  left: 0;
+-  font-weight: 600;
+-  max-width: 90%;
+-  font-size: 1.25rem;
+-  background-color: rgba(0, 0, 0, 0.8);
+-  padding: 0.5rem;
+-}
+-@media (min-width: 1024px) {
+-  .swiperSlideText {
+-    font-size: 1.75rem;
+-  }
+-}
+-
+-.swiperSlidePrice {
+-  color: #000000;
+-  position: absolute;
+-  top: 143px;
+-  left: 11px;
+-  font-weight: 600;
+-  max-width: 90%;
+-  background-color: #ffffff;
+-  padding: 0.25rem 0.5rem;
+-  border-radius: 1rem;
+-}
+-@media (min-width: 1024px) {
+-  .swiperSlidePrice {
+-    font-size: 1.25rem;
+-  }
+-}
+-
+-.exploreCategories {
+-  display: flex;
+-  justify-content: space-between;
+-}
+-.exploreCategories a {
+-  width: 48%;
+-}
+-
+-.exploreCategoryImg {
+-  min-height: 115px;
+-  height: 15vw;
+-  width: 100%;
+-  border-radius: 1.5rem;
+-  object-fit: cover;
+-  margin: 0 auto;
+-}
+-
+-.exploreCategoryName {
+-  font-weight: 500;
+-  text-align: left;
+-}
+-
+-.category {
+-  margin-bottom: 10rem;
+-}
+-
+-.categoryListings {
+-  padding: 0;
+-}
+-
+-.categoryListing {
+-  display: flex;
+-  justify-content: space-between;
+-  align-items: center;
+-  margin-bottom: 1rem;
+-  position: relative;
+-}
+-
+-.categoryListingLink {
+-  display: contents;
+-}
+-
+-.categoryListingImg {
+-  width: 30%;
+-  height: 100px;
+-  border-radius: 1.5rem;
+-  object-fit: cover;
+-}
+-@media (min-width: 1024px) {
+-  .categoryListingImg {
+-    width: 19%;
+-    height: 217px;
+-  }
+-}
+-
+-.categoryListingDetails {
+-  width: 65%;
+-}
+-@media (min-width: 1024px) {
+-  .categoryListingDetails {
+-    width: 79%;
+-  }
+-}
+-
+-.categoryListingLocation {
+-  font-weight: 600;
+-  font-size: 0.7rem;
+-  opacity: 0.8;
+-  margin-bottom: 0;
+-}
+-
+-.categoryListingName {
+-  font-weight: 600;
+-  font-size: 1.25rem;
+-  margin: 0;
+-}
+-
+-.categoryListingPrice {
+-  margin-top: 0.5rem;
+-  font-weight: 600;
+-  font-size: 1.1rem;
+-  color: #00cc66;
+-  margin-bottom: 0;
+-  display: flex;
+-  align-items: center;
+-}
+-
+-.categoryListingInfoDiv {
+-  display: flex;
+-  justify-content: space-between;
+-  max-width: 275px;
+-}
+-
+-.categoryListingInfoText {
+-  font-weight: 500;
+-  font-size: 0.7rem;
+-}
+-
+-.loadMore {
+-  cursor: pointer;
+-  width: 8rem;
+-  margin: 0 auto;
+-  text-align: center;
+-  padding: 0.25rem 0.5rem;
+-  background-color: #000000;
+-  color: #ffffff;
+-  font-weight: 600;
+-  border-radius: 1rem;
+-  opacity: 0.7;
+-  margin-top: 2rem;
+-}
+-
+-.listingDetails {
+-  margin-bottom: 10rem;
+-}
+-
+-.shareIconDiv {
+-  cursor: pointer;
+-  position: fixed;
+-  top: 3%;
+-  right: 5%;
+-  z-index: 2;
+-  background-color: #ffffff;
+-  border-radius: 50%;
+-  width: 3rem;
+-  height: 3rem;
+-  display: flex;
+-  justify-content: center;
+-  align-items: center;
+-}
+-
+-.listingName {
+-  font-weight: 600;
+-  font-size: 1.5rem;
+-  margin-bottom: 0.5rem;
+-}
+-
+-.listingLocation {
+-  margin-top: 0;
+-  font-weight: 600;
+-}
+-
+-.discountPrice {
+-  padding: 0.25rem 0.5rem;
+-  background-color: #000000;
+-  color: #ffffff;
+-  border-radius: 1rem;
+-  font-size: 0.8rem;
+-  font-weight: 600;
+-  display: inline;
+-}
+-
+-.listingType {
+-  padding: 0.25rem 0.5rem;
+-  background-color: #00cc66;
+-  color: #ffffff;
+-  border-radius: 2rem;
+-  display: inline;
+-  font-weight: 600;
+-  font-size: 0.8rem;
+-  margin-right: 1rem;
+-}
+-
+-.listingDetailsList {
+-  padding: 0;
+-  list-style-type: none;
+-}
+-.listingDetailsList li {
+-  margin: 0.3rem 0;
+-  font-weight: 500;
+-  opacity: 0.8;
+-}
+-
+-.listingLocationTitle {
+-  margin-top: 2rem;
+-  font-weight: 600;
+-  font-size: 1.25rem;
+-}
+-
+-.leafletContainer {
+-  width: 100%;
+-  height: 200px;
+-  overflow-x: hidden;
+-  margin-bottom: 3rem;
+-}
+-@media (min-width: 1024px) {
+-  .leafletContainer {
+-    height: 400px;
+-  }
+-}
+-
+-.linkCopied {
+-  position: fixed;
+-  top: 9%;
+-  right: 5%;
+-  z-index: 2;
+-  background-color: #ffffff;
+-  border-radius: 1rem;
+-  padding: 0.5rem 1rem;
+-  font-weight: 600;
+-}
+-
+-.contactListingName {
+-  margin-top: -1rem;
+-  margin-bottom: 0;
+-  font-weight: 600;
+-}
+-
+-.contactListingLocation {
+-  margin-top: 0.25rem;
+-  font-weight: 600;
+-}
+-
+-.contactLandlord {
+-  margin-top: 2rem;
+-  display: flex;
+-  align-items: center;
+-}
+-
+-.landlordName {
+-  font-weight: 600;
+-  font-size: 1.2rem;
+-}
+-
+-.messageForm {
+-  margin-top: 0.5rem;
+-}
+-
+-.messageDiv {
+-  margin-top: 2rem;
+-  display: flex;
+-  flex-direction: column;
+-  margin-bottom: 4rem;
+-}
+-
+-.messageLabel {
+-  margin-bottom: 0.5rem;
+-}
+-
+-.profile {
+-  margin-bottom: 10rem;
+-}
+-
+-.profileHeader {
+-  display: flex;
+-  justify-content: space-between;
+-  align-items: center;
+-}
+-
+-.logOut {
+-  cursor: pointer;
+-  /* font-family: 'Montserrat', sans-serif; */
+-  font-size: 1rem;
+-  font-weight: 600;
+-  color: #ffffff;
+-  background-color: #00cc66;
+-  padding: 0.25rem 0.75rem;
+-  border-radius: 1rem;
+-}
+-
+-.profileDetailsHeader {
+-  display: flex;
+-  justify-content: space-between;
+-  max-width: 500px;
+-}
+-
+-.personalDetailsText {
+-  font-weight: 600;
+-}
+-
+-.changePersonalDetails {
+-  cursor: pointer;
+-  font-weight: 600;
+-  color: #00cc66;
+-}
+-
+-.profileCard {
+-  background-color: #ffffff;
+-  border-radius: 1rem;
+-  padding: 1rem;
+-  box-shadow: rgba(0, 0, 0, 0.2);
+-  max-width: 500px;
+-}
+-
+-.profileDetails {
+-  display: flex;
+-  flex-direction: column;
+-}
+-
+-.profileName,
+-.profileEmail,
+-.profileAddress,
+-.profileAddressActive,
+-.profileEmailActive,
+-.profileNameActive {
+-  all: unset;
+-  margin: 0.3rem 0;
+-  font-weight: 600;
+-  width: 100%;
+-}
+-.profileNameActive {
+-  background-color: rgba(44, 44, 44, 0.1);
+-}
+-
+-.profileEmail,
+-.profileAddress,
+-.profileAddressActive,
+-.profileEmailActive {
+-  font-weight: 500;
+-}
+-.profileEmailActive {
+-  background-color: rgba(44, 44, 44, 0.1);
+-}
+-
+-.profileAddressActive {
+-  background-color: rgba(44, 44, 44, 0.1);
+-}
+-
+-.createListing {
+-  background-color: #ffffff;
+-  border-radius: 1rem;
+-  padding: 0.25rem 1rem;
+-  box-shadow: rgba(0, 0, 0, 0.2);
+-  margin-top: 2rem;
+-  font-weight: 600;
+-  max-width: 500px;
+-  display: flex;
+-  justify-content: space-between;
+-  align-items: center;
+-}
+-
+-.listingText {
+-  margin-top: 3rem;
+-  font-weight: 600;
+-}
+-
+-.lisitingsList {
+-  padding: 0;
+-}
+-
+-.formLabel {
+-  font-weight: 600;
+-  margin-top: 1rem;
+-  display: block;
+-}
+-
+-.formButtons {
+-  display: flex;
+-}
+-
+-.formButton,
+-.formInput,
+-.formInputAddress,
+-.formInputName,
+-.formInputSmall,
+-.formInputFile,
+-.formButtonActive {
+-  padding: 0.9rem 3rem;
+-  background-color: #ffffff;
+-  font-weight: 600;
+-  border-radius: 1rem;
+-  font-size: 1rem;
+-  margin: 0.5rem 0.5rem 0 0;
+-  display: flex;
+-  justify-content: center;
+-  align-items: center;
+-}
+-.formButtonActive {
+-  background-color: #00cc66;
+-  color: #ffffff;
+-}
+-
+ .flex {
+   display: flex;
+ }
+ 
+-.formInput,
+-.formInputAddress,
+-.formInputName,
+-.formInputSmall,
+-.formInputFile {
+-  border: none;
+-  outline: none;
+-  font-family: 'Montserrat', sans-serif;
+-}
+-.formInputSmall,
+-.formInputFile {
+-  margin-right: 3rem;
+-  padding: 0.9rem 0.7rem;
+-  text-align: center;
+-}
+-
+-.formInputName {
+-  padding: 0.9rem 1rem;
+-  width: 90%;
+-  max-width: 326px;
+-}
+-
+-.formInputAddress {
+-  padding: 0.9rem 1rem;
+-  width: 90%;
+-  max-width: 326px;
+-}
+-
+-.formPriceDiv {
+-  display: flex;
+-  align-items: center;
+-}
+-
+-.formPriceText {
+-  margin-left: -1.5rem;
+-  font-weight: 600;
+-}
+-
+-.imagesInfo {
+-  font-size: 0.9rem;
+-  opacity: 0.75;
+-}
+-
+-.formInputFile {
+-  width: 100%;
+-}
+-.formInputFile::-webkit-file-upload-button {
+-  background-color: #00cc66;
+-  border: none;
+-  color: #ffffff;
+-  font-weight: 600;
+-  padding: 0.5rem 0.75rem;
+-  border-radius: 1rem;
+-  margin-right: 1rem;
+-}
+-
+-.createListingButton {
+-  margin-top: 5rem;
+-}
+-
+-.offers {
+-  margin-bottom: 10rem;
+-}
+-
+-.offerBadge {
+-  padding: 0.25rem 0.5rem;
+-  background-color: #000000;
+-  color: #ffffff;
+-  border-radius: 1rem;
+-  margin-left: 1rem;
+-  font-size: 0.8rem;
+-  opacity: 0.75;
+-}
+-.authenticationPage {
+-  display: flex;
+-  justify-content: center;
+-  align-items: center;
+-  height: 100vh; /* Full viewport height */
+-  /* background-color: #f5f5f5; */
+-  margin: 0;
+-}
+-
+ /* Board Styling */
+ .board-container {
+   height: 100vh;
+diff --git a/src/redux/slices/boardSlice.js b/src/redux/slices/boardSlice.js
+index 06977d4..8716c8a 100644
+--- a/src/redux/slices/boardSlice.js
++++ b/src/redux/slices/boardSlice.js
+@@ -44,6 +44,7 @@ export const addBoard = createAsyncThunk('board/addBoard', async (boardName, thu
+ 
+ // ================= Task Updates ================= //
+ export const addTask = createAsyncThunk('board/addTask', async (addTaskDetails, thunkAPI) => {
++  console.log('updatedTaskDetails 1.: ', updatedTaskDetails);
+   const { userId, boardId, category, updatedTaskDetails } = addTaskDetails;
+   try {
+     return await boardService.addTask(userId, boardId, category, updatedTaskDetails);
+@@ -79,6 +80,14 @@ export const fetchComments = createAsyncThunk('board/task/fetchComments', async
+   }
+ });
+ 
++export const addComment = createAsyncThunk('board/task/addComment', async (commentDetails, thunkAPI) => {
++  try {
++    return await boardService.addComment(commentDetails);
++  } catch (err) {
++    return thunkAPI.rejectWithValue(err.response.data.error);
++  }
++});
++
+ export const boardSlice = createSlice({
+   name: 'board',
+   initialState: details,
+@@ -174,6 +183,16 @@ export const boardSlice = createSlice({
+       })
+       .addCase(updateTask.rejected, (state) => {
+         state.isLoading = false;
++      })
++      .addCase(addComment.pending, (state) => {
++        state.isLoading = true;
++      })
++      .addCase(addComment.rejected, (state) => {
++        state.isLoading = false;
++      })
++      .addCase(addComment.fulfilled, (state, action) => {
++        console.log(action.payload);
++        state.isLoading = false;
+       });
+   },
+ });
+diff --git a/src/server/server.js b/src/server/server.js
+index e4ce3cb..6afc943 100644
+--- a/src/server/server.js
++++ b/src/server/server.js
+@@ -208,6 +208,7 @@ app.post('/add-task', authenticate, async (req, res) => {
+         .status(404)
+         .json({ error: `Board not found for the boardId: ${boardId} and userId: ${userId}` });
+     }
++    console.log('taskDetails: ', taskDetails);
+     const newTask = await prisma.task.create({
+       data: {
+         heading: taskDetails.heading || 'Add Something!!',
+@@ -220,12 +221,14 @@ app.post('/add-task', authenticate, async (req, res) => {
+         status: taskDetails.status || 'On_Track',
+         taskCategory: columnId,
+         assignee: taskDetails.assignee || 'Rufus',
++        aiGeneratedResponse: taskDetails.aiGeneratedResponse || '',
+         taskCategory: columnId,
+         board: {
+           connect: { id: boardId },
+         },
+       },
+     });
++    console.log('should be successfully updated');
+     res.status(200).json({ message: 'Task added successfully', task: newTask });
+   } catch (err) {
+     res.status(500).json({ error: 'An error occurred while adding the task' });
+@@ -388,7 +391,11 @@ app.post('/add-comment', authenticate, async (req, res) => {
+       userId,
+     },
+   });
+-  res.status(200).json({ message: 'Comment added successfully ', addedComment });
++  const newComment = await prisma.comment.findUnique({
++    where: { id: addedComment.id },
++    include: { user: true },
++  });
++  res.status(200).json({ message: 'Comment added successfully ', addedComment: newComment });
+ });
+ 
+ // ============= NODES AND EDGES (PROJECT-CANVAS) =============
+@@ -412,7 +419,11 @@ app.get('/get-project-canvases', authenticate, async (req, res) => {
+       include: {
+         projectCanvases: {
+           include: {
+-            nodes: true,
++            nodes: {
++              include: {
++                tasks: true,
++              },
++            },
+             edges: true,
+           },
+         },
+diff --git a/src/service/boardService.js b/src/service/boardService.js
+index 5299a2e..ea8d7f3 100644
+--- a/src/service/boardService.js
++++ b/src/service/boardService.js
+@@ -32,6 +32,7 @@ const addBoard = async (userId, boardName) => {
+ };
+ 
+ const addTask = async (userId, boardId, category, updatedTaskDetails) => {
++  console.log('updatedTaskDetails 2.: ', updatedTaskDetails);
+   const response = await axios.post(
+     'http://localhost:3001/add-task',
+     {
+@@ -88,6 +89,23 @@ const fetchComments = async (taskId) => {
+   return response.data.comments;
+ };
+ 
++const addComment = async (commentDetails) => {
++  const { content, taskId, userId } = commentDetails;
++  const token = sessionStorage.getItem('authToken');
++  const response = await axios.post(
++    `http://localhost:3001/add-comment`,
++    {
++      content,
++      taskId,
++      userId,
++    },
++    {
++      headers: { Authorization: `Bearer ${token}` },
++    }
++  );
++  return response.data.addedComment;
++};
++
+ const boardService = {
+   fetchBoards,
+   fetchUsers,
+@@ -98,6 +116,7 @@ const boardService = {
+   removeTask,
+ 
+   fetchComments,
++  addComment,
+ };
+ 
+ export default boardService;
+diff --git a/yarn.lock b/yarn.lock
+index 6d610f9..5b51e76 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -1371,6 +1371,131 @@
+   resolved "https://registry.yarnpkg.com/@emotion/unitless/-/unitless-0.7.5.tgz#77211291c1900a700b8a78cfafda3160d76949ed"
+   integrity sha512-OWORNpfjMsSSUBVrRBVGECkhWcULOAJz9ZW8uK9qgxD+87M7jHRcvh/A96XXNhXTLmKcoYSQtBEX7lHMO7YRwg==
+ 
++"@esbuild/aix-ppc64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/aix-ppc64/-/aix-ppc64-0.25.5.tgz#4e0f91776c2b340e75558f60552195f6fad09f18"
++  integrity sha512-9o3TMmpmftaCMepOdA5k/yDw8SfInyzWWTjYTFCX3kPSDJMROQTb8jg+h9Cnwnmm1vOzvxN7gIfB5V2ewpjtGA==
++
++"@esbuild/android-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/android-arm64/-/android-arm64-0.25.5.tgz#bc766407f1718923f6b8079c8c61bf86ac3a6a4f"
++  integrity sha512-VGzGhj4lJO+TVGV1v8ntCZWJktV7SGCs3Pn1GRWI1SBFtRALoomm8k5E9Pmwg3HOAal2VDc2F9+PM/rEY6oIDg==
++
++"@esbuild/android-arm@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/android-arm/-/android-arm-0.25.5.tgz#4290d6d3407bae3883ad2cded1081a234473ce26"
++  integrity sha512-AdJKSPeEHgi7/ZhuIPtcQKr5RQdo6OO2IL87JkianiMYMPbCtot9fxPbrMiBADOWWm3T2si9stAiVsGbTQFkbA==
++
++"@esbuild/android-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/android-x64/-/android-x64-0.25.5.tgz#40c11d9cbca4f2406548c8a9895d321bc3b35eff"
++  integrity sha512-D2GyJT1kjvO//drbRT3Hib9XPwQeWd9vZoBJn+bu/lVsOZ13cqNdDeqIF/xQ5/VmWvMduP6AmXvylO/PIc2isw==
++
++"@esbuild/darwin-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/darwin-arm64/-/darwin-arm64-0.25.5.tgz#49d8bf8b1df95f759ac81eb1d0736018006d7e34"
++  integrity sha512-GtaBgammVvdF7aPIgH2jxMDdivezgFu6iKpmT+48+F8Hhg5J/sfnDieg0aeG/jfSvkYQU2/pceFPDKlqZzwnfQ==
++
++"@esbuild/darwin-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/darwin-x64/-/darwin-x64-0.25.5.tgz#e27a5d92a14886ef1d492fd50fc61a2d4d87e418"
++  integrity sha512-1iT4FVL0dJ76/q1wd7XDsXrSW+oLoquptvh4CLR4kITDtqi2e/xwXwdCVH8hVHU43wgJdsq7Gxuzcs6Iq/7bxQ==
++
++"@esbuild/freebsd-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/freebsd-arm64/-/freebsd-arm64-0.25.5.tgz#97cede59d638840ca104e605cdb9f1b118ba0b1c"
++  integrity sha512-nk4tGP3JThz4La38Uy/gzyXtpkPW8zSAmoUhK9xKKXdBCzKODMc2adkB2+8om9BDYugz+uGV7sLmpTYzvmz6Sw==
++
++"@esbuild/freebsd-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/freebsd-x64/-/freebsd-x64-0.25.5.tgz#71c77812042a1a8190c3d581e140d15b876b9c6f"
++  integrity sha512-PrikaNjiXdR2laW6OIjlbeuCPrPaAl0IwPIaRv+SMV8CiM8i2LqVUHFC1+8eORgWyY7yhQY+2U2fA55mBzReaw==
++
++"@esbuild/linux-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-arm64/-/linux-arm64-0.25.5.tgz#f7b7c8f97eff8ffd2e47f6c67eb5c9765f2181b8"
++  integrity sha512-Z9kfb1v6ZlGbWj8EJk9T6czVEjjq2ntSYLY2cw6pAZl4oKtfgQuS4HOq41M/BcoLPzrUbNd+R4BXFyH//nHxVg==
++
++"@esbuild/linux-arm@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-arm/-/linux-arm-0.25.5.tgz#2a0be71b6cd8201fa559aea45598dffabc05d911"
++  integrity sha512-cPzojwW2okgh7ZlRpcBEtsX7WBuqbLrNXqLU89GxWbNt6uIg78ET82qifUy3W6OVww6ZWobWub5oqZOVtwolfw==
++
++"@esbuild/linux-ia32@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-ia32/-/linux-ia32-0.25.5.tgz#763414463cd9ea6fa1f96555d2762f9f84c61783"
++  integrity sha512-sQ7l00M8bSv36GLV95BVAdhJ2QsIbCuCjh/uYrWiMQSUuV+LpXwIqhgJDcvMTj+VsQmqAHL2yYaasENvJ7CDKA==
++
++"@esbuild/linux-loong64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-loong64/-/linux-loong64-0.25.5.tgz#428cf2213ff786a502a52c96cf29d1fcf1eb8506"
++  integrity sha512-0ur7ae16hDUC4OL5iEnDb0tZHDxYmuQyhKhsPBV8f99f6Z9KQM02g33f93rNH5A30agMS46u2HP6qTdEt6Q1kg==
++
++"@esbuild/linux-mips64el@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-mips64el/-/linux-mips64el-0.25.5.tgz#5cbcc7fd841b4cd53358afd33527cd394e325d96"
++  integrity sha512-kB/66P1OsHO5zLz0i6X0RxlQ+3cu0mkxS3TKFvkb5lin6uwZ/ttOkP3Z8lfR9mJOBk14ZwZ9182SIIWFGNmqmg==
++
++"@esbuild/linux-ppc64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-ppc64/-/linux-ppc64-0.25.5.tgz#0d954ab39ce4f5e50f00c4f8c4fd38f976c13ad9"
++  integrity sha512-UZCmJ7r9X2fe2D6jBmkLBMQetXPXIsZjQJCjgwpVDz+YMcS6oFR27alkgGv3Oqkv07bxdvw7fyB71/olceJhkQ==
++
++"@esbuild/linux-riscv64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-riscv64/-/linux-riscv64-0.25.5.tgz#0e7dd30730505abd8088321e8497e94b547bfb1e"
++  integrity sha512-kTxwu4mLyeOlsVIFPfQo+fQJAV9mh24xL+y+Bm6ej067sYANjyEw1dNHmvoqxJUCMnkBdKpvOn0Ahql6+4VyeA==
++
++"@esbuild/linux-s390x@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-s390x/-/linux-s390x-0.25.5.tgz#5669af81327a398a336d7e40e320b5bbd6e6e72d"
++  integrity sha512-K2dSKTKfmdh78uJ3NcWFiqyRrimfdinS5ErLSn3vluHNeHVnBAFWC8a4X5N+7FgVE1EjXS1QDZbpqZBjfrqMTQ==
++
++"@esbuild/linux-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/linux-x64/-/linux-x64-0.25.5.tgz#b2357dd153aa49038967ddc1ffd90c68a9d2a0d4"
++  integrity sha512-uhj8N2obKTE6pSZ+aMUbqq+1nXxNjZIIjCjGLfsWvVpy7gKCOL6rsY1MhRh9zLtUtAI7vpgLMK6DxjO8Qm9lJw==
++
++"@esbuild/netbsd-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/netbsd-arm64/-/netbsd-arm64-0.25.5.tgz#53b4dfb8fe1cee93777c9e366893bd3daa6ba63d"
++  integrity sha512-pwHtMP9viAy1oHPvgxtOv+OkduK5ugofNTVDilIzBLpoWAM16r7b/mxBvfpuQDpRQFMfuVr5aLcn4yveGvBZvw==
++
++"@esbuild/netbsd-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/netbsd-x64/-/netbsd-x64-0.25.5.tgz#a0206f6314ce7dc8713b7732703d0f58de1d1e79"
++  integrity sha512-WOb5fKrvVTRMfWFNCroYWWklbnXH0Q5rZppjq0vQIdlsQKuw6mdSihwSo4RV/YdQ5UCKKvBy7/0ZZYLBZKIbwQ==
++
++"@esbuild/openbsd-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/openbsd-arm64/-/openbsd-arm64-0.25.5.tgz#2a796c87c44e8de78001d808c77d948a21ec22fd"
++  integrity sha512-7A208+uQKgTxHd0G0uqZO8UjK2R0DDb4fDmERtARjSHWxqMTye4Erz4zZafx7Di9Cv+lNHYuncAkiGFySoD+Mw==
++
++"@esbuild/openbsd-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/openbsd-x64/-/openbsd-x64-0.25.5.tgz#28d0cd8909b7fa3953af998f2b2ed34f576728f0"
++  integrity sha512-G4hE405ErTWraiZ8UiSoesH8DaCsMm0Cay4fsFWOOUcz8b8rC6uCvnagr+gnioEjWn0wC+o1/TAHt+It+MpIMg==
++
++"@esbuild/sunos-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/sunos-x64/-/sunos-x64-0.25.5.tgz#a28164f5b997e8247d407e36c90d3fd5ddbe0dc5"
++  integrity sha512-l+azKShMy7FxzY0Rj4RCt5VD/q8mG/e+mDivgspo+yL8zW7qEwctQ6YqKX34DTEleFAvCIUviCFX1SDZRSyMQA==
++
++"@esbuild/win32-arm64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/win32-arm64/-/win32-arm64-0.25.5.tgz#6eadbead38e8bd12f633a5190e45eff80e24007e"
++  integrity sha512-O2S7SNZzdcFG7eFKgvwUEZ2VG9D/sn/eIiz8XRZ1Q/DO5a3s76Xv0mdBzVM5j5R639lXQmPmSo0iRpHqUUrsxw==
++
++"@esbuild/win32-ia32@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/win32-ia32/-/win32-ia32-0.25.5.tgz#bab6288005482f9ed2adb9ded7e88eba9a62cc0d"
++  integrity sha512-onOJ02pqs9h1iMJ1PQphR+VZv8qBMQ77Klcsqv9CNW2w6yLqoURLcgERAIurY6QE63bbLuqgP9ATqajFLK5AMQ==
++
++"@esbuild/win32-x64@0.25.5":
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/@esbuild/win32-x64/-/win32-x64-0.25.5.tgz#7fc114af5f6563f19f73324b5d5ff36ece0803d1"
++  integrity sha512-TXv6YnJ8ZMVdX+SXWVBo/0p8LTcrUYngpWjvm91TMjjBQii7Oz11Lw5lbDV5Y0TzuhSJHwiH4hEtC1I42mMS0g==
++
+ "@eslint-community/eslint-utils@^4.2.0":
+   version "4.4.1"
+   resolved "https://registry.yarnpkg.com/@eslint-community/eslint-utils/-/eslint-utils-4.4.1.tgz#d1145bf2c20132d6400495d6df4bf59362fd9d56"
+@@ -3724,6 +3849,149 @@
+     "@react-types/shared" "^3.28.0"
+     "@swc/helpers" "^0.5.0"
+ 
++"@react-email/body@0.0.11":
++  version "0.0.11"
++  resolved "https://registry.yarnpkg.com/@react-email/body/-/body-0.0.11.tgz#996bc8ab0038a3b183d086fc4b5c581764b36d32"
++  integrity sha512-ZSD2SxVSgUjHGrB0Wi+4tu3MEpB4fYSbezsFNEJk2xCWDBkFiOeEsjTmR5dvi+CxTK691hQTQlHv0XWuP7ENTg==
++
++"@react-email/button@0.0.19":
++  version "0.0.19"
++  resolved "https://registry.yarnpkg.com/@react-email/button/-/button-0.0.19.tgz#f7585fd560f59be661c6ccdc3211df8b17f9fc86"
++  integrity sha512-HYHrhyVGt7rdM/ls6FuuD6XE7fa7bjZTJqB2byn6/oGsfiEZaogY77OtoLL/mrQHjHjZiJadtAMSik9XLcm7+A==
++
++"@react-email/code-block@0.0.13":
++  version "0.0.13"
++  resolved "https://registry.yarnpkg.com/@react-email/code-block/-/code-block-0.0.13.tgz#32d8edeaba42567022a3125807abf23b8e41da91"
++  integrity sha512-4DE4yPSgKEOnZMzcrDvRuD6mxsNxOex0hCYEG9F9q23geYgb2WCCeGBvIUXVzK69l703Dg4Vzrd5qUjl+JfcwA==
++  dependencies:
++    prismjs "^1.30.0"
++
++"@react-email/code-inline@0.0.5":
++  version "0.0.5"
++  resolved "https://registry.yarnpkg.com/@react-email/code-inline/-/code-inline-0.0.5.tgz#1ca46f4d44207c3dcca3ce35210f643d811ee8e0"
++  integrity sha512-MmAsOzdJpzsnY2cZoPHFPk6uDO/Ncpb4Kh1hAt9UZc1xOW3fIzpe1Pi9y9p6wwUmpaeeDalJxAxH6/fnTquinA==
++
++"@react-email/column@0.0.13":
++  version "0.0.13"
++  resolved "https://registry.yarnpkg.com/@react-email/column/-/column-0.0.13.tgz#0aaa5d6abae1b590a0262bfbfd241344a2c60ad3"
++  integrity sha512-Lqq17l7ShzJG/d3b1w/+lVO+gp2FM05ZUo/nW0rjxB8xBICXOVv6PqjDnn3FXKssvhO5qAV20lHM6S+spRhEwQ==
++
++"@react-email/components@^0.0.41":
++  version "0.0.41"
++  resolved "https://registry.yarnpkg.com/@react-email/components/-/components-0.0.41.tgz#11d51e3a056d276a8d4ea0ec190b45a7b9708f38"
++  integrity sha512-WUI3wHwra3QS0pwrovSU6b0I0f3TvY33ph0y44LuhSYDSQlMRyeOzgoT6HRDY5FXMDF57cHYq9WoKwpwP0yd7Q==
++  dependencies:
++    "@react-email/body" "0.0.11"
++    "@react-email/button" "0.0.19"
++    "@react-email/code-block" "0.0.13"
++    "@react-email/code-inline" "0.0.5"
++    "@react-email/column" "0.0.13"
++    "@react-email/container" "0.0.15"
++    "@react-email/font" "0.0.9"
++    "@react-email/head" "0.0.12"
++    "@react-email/heading" "0.0.15"
++    "@react-email/hr" "0.0.11"
++    "@react-email/html" "0.0.11"
++    "@react-email/img" "0.0.11"
++    "@react-email/link" "0.0.12"
++    "@react-email/markdown" "0.0.15"
++    "@react-email/preview" "0.0.13"
++    "@react-email/render" "1.1.2"
++    "@react-email/row" "0.0.12"
++    "@react-email/section" "0.0.16"
++    "@react-email/tailwind" "1.0.5"
++    "@react-email/text" "0.1.4"
++
++"@react-email/container@0.0.15":
++  version "0.0.15"
++  resolved "https://registry.yarnpkg.com/@react-email/container/-/container-0.0.15.tgz#6a35f0792cfd4b1ec557c7d566cdc2ecbdeb6d01"
++  integrity sha512-Qo2IQo0ru2kZq47REmHW3iXjAQaKu4tpeq/M8m1zHIVwKduL2vYOBQWbC2oDnMtWPmkBjej6XxgtZByxM6cCFg==
++
++"@react-email/font@0.0.9":
++  version "0.0.9"
++  resolved "https://registry.yarnpkg.com/@react-email/font/-/font-0.0.9.tgz#fe2ae24c408fe605cb564f75ef00d826a3dbdd35"
++  integrity sha512-4zjq23oT9APXkerqeslPH3OZWuh5X4crHK6nx82mVHV2SrLba8+8dPEnWbaACWTNjOCbcLIzaC9unk7Wq2MIXw==
++
++"@react-email/head@0.0.12":
++  version "0.0.12"
++  resolved "https://registry.yarnpkg.com/@react-email/head/-/head-0.0.12.tgz#83c1beba4e0e5207aa6f7ae9601f8cbdbda23d13"
++  integrity sha512-X2Ii6dDFMF+D4niNwMAHbTkeCjlYYnMsd7edXOsi0JByxt9wNyZ9EnhFiBoQdqkE+SMDcu8TlNNttMrf5sJeMA==
++
++"@react-email/heading@0.0.15":
++  version "0.0.15"
++  resolved "https://registry.yarnpkg.com/@react-email/heading/-/heading-0.0.15.tgz#c6dd807ae684cbc37402fdd23dbd5500e245b531"
++  integrity sha512-xF2GqsvBrp/HbRHWEfOgSfRFX+Q8I5KBEIG5+Lv3Vb2R/NYr0s8A5JhHHGf2pWBMJdbP4B2WHgj/VUrhy8dkIg==
++
++"@react-email/hr@0.0.11":
++  version "0.0.11"
++  resolved "https://registry.yarnpkg.com/@react-email/hr/-/hr-0.0.11.tgz#bce7748f5c1b9558429e733e5a239b09d06b77db"
++  integrity sha512-S1gZHVhwOsd1Iad5IFhpfICwNPMGPJidG/Uysy1AwmspyoAP5a4Iw3OWEpINFdgh9MHladbxcLKO2AJO+cA9Lw==
++
++"@react-email/html@0.0.11":
++  version "0.0.11"
++  resolved "https://registry.yarnpkg.com/@react-email/html/-/html-0.0.11.tgz#10557538436cb098819b8c7a0d1da9ddd8aaf4d8"
++  integrity sha512-qJhbOQy5VW5qzU74AimjAR9FRFQfrMa7dn4gkEXKMB/S9xZN8e1yC1uA9C15jkXI/PzmJ0muDIWmFwatm5/+VA==
++
++"@react-email/img@0.0.11":
++  version "0.0.11"
++  resolved "https://registry.yarnpkg.com/@react-email/img/-/img-0.0.11.tgz#ee2c9d6b2c61e8e9537a00b6d5f3d51428410f85"
++  integrity sha512-aGc8Y6U5C3igoMaqAJKsCpkbm1XjguQ09Acd+YcTKwjnC2+0w3yGUJkjWB2vTx4tN8dCqQCXO8FmdJpMfOA9EQ==
++
++"@react-email/link@0.0.12":
++  version "0.0.12"
++  resolved "https://registry.yarnpkg.com/@react-email/link/-/link-0.0.12.tgz#3b65e50af546e2539d9bfbb8442c7bdad7007235"
++  integrity sha512-vF+xxQk2fGS1CN7UPQDbzvcBGfffr+GjTPNiWM38fhBfsLv6A/YUfaqxWlmL7zLzVmo0K2cvvV9wxlSyNba1aQ==
++
++"@react-email/markdown@0.0.15":
++  version "0.0.15"
++  resolved "https://registry.yarnpkg.com/@react-email/markdown/-/markdown-0.0.15.tgz#b1a4421796f711a3d5ea2e29c1a943b41ab5e918"
++  integrity sha512-UQA9pVm5sbflgtg3EX3FquUP4aMBzmLReLbGJ6DZQZnAskBF36aI56cRykDq1o+1jT+CKIK1CducPYziaXliag==
++  dependencies:
++    md-to-react-email "^5.0.5"
++
++"@react-email/preview@0.0.13":
++  version "0.0.13"
++  resolved "https://registry.yarnpkg.com/@react-email/preview/-/preview-0.0.13.tgz#b68365d26a2772910d7a19345fa109819b167606"
++  integrity sha512-F7j9FJ0JN/A4d7yr+aw28p4uX7VLWs7hTHtLo7WRyw4G+Lit6Zucq4UWKRxJC8lpsUdzVmG7aBJnKOT+urqs/w==
++
++"@react-email/render@1.0.6":
++  version "1.0.6"
++  resolved "https://registry.yarnpkg.com/@react-email/render/-/render-1.0.6.tgz#52ee2276febd4a08e3f2a7ad3c055d451e7d3731"
++  integrity sha512-zNueW5Wn/4jNC1c5LFgXzbUdv5Lhms+FWjOvWAhal7gx5YVf0q6dPJ0dnR70+ifo59gcMLwCZEaTS9EEuUhKvQ==
++  dependencies:
++    html-to-text "9.0.5"
++    prettier "3.5.3"
++    react-promise-suspense "0.3.4"
++
++"@react-email/render@1.1.2", "@react-email/render@^1.1.2":
++  version "1.1.2"
++  resolved "https://registry.yarnpkg.com/@react-email/render/-/render-1.1.2.tgz#49a3d0ec3c650bd280f0614359f25de907c9e0da"
++  integrity sha512-RnRehYN3v9gVlNMehHPHhyp2RQo7+pSkHDtXPvg3s0GbzM9SQMW4Qrf8GRNvtpLC4gsI+Wt0VatNRUFqjvevbw==
++  dependencies:
++    html-to-text "^9.0.5"
++    prettier "^3.5.3"
++    react-promise-suspense "^0.3.4"
++
++"@react-email/row@0.0.12":
++  version "0.0.12"
++  resolved "https://registry.yarnpkg.com/@react-email/row/-/row-0.0.12.tgz#c9d18f6d4b173e95787949909a48ad5a5633bbf2"
++  integrity sha512-HkCdnEjvK3o+n0y0tZKXYhIXUNPDx+2vq1dJTmqappVHXS5tXS6W5JOPZr5j+eoZ8gY3PShI2LWj5rWF7ZEtIQ==
++
++"@react-email/section@0.0.16":
++  version "0.0.16"
++  resolved "https://registry.yarnpkg.com/@react-email/section/-/section-0.0.16.tgz#34214e6367d8c1b725b38a8b89391cd38f076a81"
++  integrity sha512-FjqF9xQ8FoeUZYKSdt8sMIKvoT9XF8BrzhT3xiFKdEMwYNbsDflcjfErJe3jb7Wj/es/lKTbV5QR1dnLzGpL3w==
++
++"@react-email/tailwind@1.0.5":
++  version "1.0.5"
++  resolved "https://registry.yarnpkg.com/@react-email/tailwind/-/tailwind-1.0.5.tgz#be09d397be4551970b159309c16be4bca3c1ff39"
++  integrity sha512-BH00cZSeFfP9HiDASl+sPHi7Hh77W5nzDgdnxtsVr/m3uQD9g180UwxcE3PhOfx0vRdLzQUU8PtmvvDfbztKQg==
++
++"@react-email/text@0.1.4":
++  version "0.1.4"
++  resolved "https://registry.yarnpkg.com/@react-email/text/-/text-0.1.4.tgz#2d6a2f68844ee14d4427a613eac95e6115ed0cc8"
++  integrity sha512-cMNE02y8172DocpNGh97uV5HSTawaS4CKG/zOku8Pu+m6ehBKbAjgtQZDIxhgstw8+TWraFB8ltS1DPjfG8nLA==
++
+ "@react-oauth/google@^0.12.1":
+   version "0.12.1"
+   resolved "https://registry.yarnpkg.com/@react-oauth/google/-/google-0.12.1.tgz#b76432c3a525e9afe076f787d2ded003fcc1bee9"
+@@ -4539,6 +4807,14 @@
+   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.10.5.tgz#3a1c12c959010a55c17d46b395ed3047b545c246"
+   integrity sha512-kkKUDVlII2DQiKy7UstOR1ErJP8kUKAQ4oa+SQtM0K+lPdmmjj0YnnxBgtTVYH7mUKtbsxeFC9y0AmK7Yb78/A==
+ 
++"@selderee/plugin-htmlparser2@^0.11.0":
++  version "0.11.0"
++  resolved "https://registry.yarnpkg.com/@selderee/plugin-htmlparser2/-/plugin-htmlparser2-0.11.0.tgz#d5b5e29a7ba6d3958a1972c7be16f4b2c188c517"
++  integrity sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==
++  dependencies:
++    domhandler "^5.0.3"
++    selderee "^0.11.0"
++
+ "@sinclair/typebox@^0.24.1":
+   version "0.24.51"
+   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.24.51.tgz#645f33fe4e02defe26f2f5c0410e1c094eac7f5f"
+@@ -7365,12 +7641,21 @@ dom-serializer@^1.0.1:
+     domhandler "^4.2.0"
+     entities "^2.0.0"
+ 
++dom-serializer@^2.0.0:
++  version "2.0.0"
++  resolved "https://registry.yarnpkg.com/dom-serializer/-/dom-serializer-2.0.0.tgz#e41b802e1eedf9f6cae183ce5e622d789d7d8e53"
++  integrity sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==
++  dependencies:
++    domelementtype "^2.3.0"
++    domhandler "^5.0.2"
++    entities "^4.2.0"
++
+ domelementtype@1:
+   version "1.3.1"
+   resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-1.3.1.tgz#d048c44b37b0d10a7f2a3d5fee3f4333d790481f"
+   integrity sha512-BSKB+TSpMpFI/HOxCNr1O8aMOTZ8hT3pM3GQ0w/mWRmkhEDSFJkkyzz4XQsBV44BChwGkrDfMyjVD0eA2aFV3w==
+ 
+-domelementtype@^2.0.1, domelementtype@^2.2.0:
++domelementtype@^2.0.1, domelementtype@^2.2.0, domelementtype@^2.3.0:
+   version "2.3.0"
+   resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-2.3.0.tgz#5c45e8e869952626331d7aab326d01daf65d589d"
+   integrity sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==
+@@ -7389,6 +7674,13 @@ domhandler@^4.0.0, domhandler@^4.2.0, domhandler@^4.3.1:
+   dependencies:
+     domelementtype "^2.2.0"
+ 
++domhandler@^5.0.2, domhandler@^5.0.3:
++  version "5.0.3"
++  resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-5.0.3.tgz#cc385f7f751f1d1fc650c21374804254538c7d31"
++  integrity sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==
++  dependencies:
++    domelementtype "^2.3.0"
++
+ domutils@^1.7.0:
+   version "1.7.0"
+   resolved "https://registry.yarnpkg.com/domutils/-/domutils-1.7.0.tgz#56ea341e834e06e6748af7a1cb25da67ea9f8c2a"
+@@ -7406,6 +7698,15 @@ domutils@^2.5.2, domutils@^2.8.0:
+     domelementtype "^2.2.0"
+     domhandler "^4.2.0"
+ 
++domutils@^3.0.1:
++  version "3.2.2"
++  resolved "https://registry.yarnpkg.com/domutils/-/domutils-3.2.2.tgz#edbfe2b668b0c1d97c24baf0f1062b132221bc78"
++  integrity sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==
++  dependencies:
++    dom-serializer "^2.0.0"
++    domelementtype "^2.3.0"
++    domhandler "^5.0.3"
++
+ dot-case@^3.0.4:
+   version "3.0.4"
+   resolved "https://registry.yarnpkg.com/dot-case/-/dot-case-3.0.4.tgz#9b2b670d00a431667a8a75ba29cd1b98809ce751"
+@@ -7552,6 +7853,11 @@ entities@^2.0.0:
+   resolved "https://registry.yarnpkg.com/entities/-/entities-2.2.0.tgz#098dc90ebb83d8dffa089d55256b351d34c4da55"
+   integrity sha512-p92if5Nz619I0w+akJrLZH0MX0Pb5DX39XOwQTtXSdQQOaYH03S1uIQp4mhOZtAXrxq4ViO67YTiLBo2638o9A==
+ 
++entities@^4.2.0, entities@^4.4.0:
++  version "4.5.0"
++  resolved "https://registry.yarnpkg.com/entities/-/entities-4.5.0.tgz#5d268ea5e7113ec74c4d033b79ea5a35a488fb48"
++  integrity sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==
++
+ error-ex@^1.3.1:
+   version "1.3.2"
+   resolved "https://registry.yarnpkg.com/error-ex/-/error-ex-1.3.2.tgz#b4ac40648107fdcdcfae242f428bea8a14d4f1bf"
+@@ -7713,6 +8019,37 @@ es-to-primitive@^1.3.0:
+     is-date-object "^1.0.5"
+     is-symbol "^1.0.4"
+ 
++esbuild@~0.25.0:
++  version "0.25.5"
++  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.25.5.tgz#71075054993fdfae76c66586f9b9c1f8d7edd430"
++  integrity sha512-P8OtKZRv/5J5hhz0cUAdu/cLuPIKXpQl1R9pZtvmHWQvrAUVd0UNIPT4IB4W3rNOqVO0rlqHmCIbSwxh/c9yUQ==
++  optionalDependencies:
++    "@esbuild/aix-ppc64" "0.25.5"
++    "@esbuild/android-arm" "0.25.5"
++    "@esbuild/android-arm64" "0.25.5"
++    "@esbuild/android-x64" "0.25.5"
++    "@esbuild/darwin-arm64" "0.25.5"
++    "@esbuild/darwin-x64" "0.25.5"
++    "@esbuild/freebsd-arm64" "0.25.5"
++    "@esbuild/freebsd-x64" "0.25.5"
++    "@esbuild/linux-arm" "0.25.5"
++    "@esbuild/linux-arm64" "0.25.5"
++    "@esbuild/linux-ia32" "0.25.5"
++    "@esbuild/linux-loong64" "0.25.5"
++    "@esbuild/linux-mips64el" "0.25.5"
++    "@esbuild/linux-ppc64" "0.25.5"
++    "@esbuild/linux-riscv64" "0.25.5"
++    "@esbuild/linux-s390x" "0.25.5"
++    "@esbuild/linux-x64" "0.25.5"
++    "@esbuild/netbsd-arm64" "0.25.5"
++    "@esbuild/netbsd-x64" "0.25.5"
++    "@esbuild/openbsd-arm64" "0.25.5"
++    "@esbuild/openbsd-x64" "0.25.5"
++    "@esbuild/sunos-x64" "0.25.5"
++    "@esbuild/win32-arm64" "0.25.5"
++    "@esbuild/win32-ia32" "0.25.5"
++    "@esbuild/win32-x64" "0.25.5"
++
+ escalade@^3.1.1, escalade@^3.2.0:
+   version "3.2.0"
+   resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.2.0.tgz#011a3f69856ba189dffa7dc8fcce99d2a87903e5"
+@@ -8141,6 +8478,11 @@ extend@^3.0.2:
+   resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.2.tgz#f8b1136b4071fbd8eb140aff858b1019ec2915fa"
+   integrity sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==
+ 
++fast-deep-equal@^2.0.1:
++  version "2.0.1"
++  resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-2.0.1.tgz#7b05218ddf9667bf7f370bf7fdb2cb15fdd0aa49"
++  integrity sha512-bCK/2Z4zLidyB4ReuIsvALH6w31YfAQDmXMqMx6FyfHqvBxtjC0eRumeSu4Bs3XtXwpyIywtSTrVT99BxY1f9w==
++
+ fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
+   version "3.1.3"
+   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
+@@ -8430,7 +8772,7 @@ fs.realpath@^1.0.0:
+   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
+   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
+ 
+-fsevents@2.3.3, fsevents@^2.3.2, fsevents@~2.3.2:
++fsevents@2.3.3, fsevents@^2.3.2, fsevents@~2.3.2, fsevents@~2.3.3:
+   version "2.3.3"
+   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
+   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
+@@ -8545,6 +8887,13 @@ get-symbol-description@^1.1.0:
+     es-errors "^1.3.0"
+     get-intrinsic "^1.2.6"
+ 
++get-tsconfig@^4.7.5:
++  version "4.10.1"
++  resolved "https://registry.yarnpkg.com/get-tsconfig/-/get-tsconfig-4.10.1.tgz#d34c1c01f47d65a606c37aa7a177bc3e56ab4b2e"
++  integrity sha512-auHyJ4AgMz7vgS8Hp3N6HXSmlMdUyhSUrfBF16w153rxtLIEOE+HGqaBppczZvnHLqQJfiHotCYpNhl0lUROFQ==
++  dependencies:
++    resolve-pkg-maps "^1.0.0"
++
+ glob-parent@^5.1.2, glob-parent@~5.1.2:
+   version "5.1.2"
+   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.2.tgz#869832c58034fe68a4093c17dc15e8340d8401c4"
+@@ -8798,6 +9147,17 @@ html-minifier-terser@^6.0.2:
+     relateurl "^0.2.7"
+     terser "^5.10.0"
+ 
++html-to-text@9.0.5, html-to-text@^9.0.5:
++  version "9.0.5"
++  resolved "https://registry.yarnpkg.com/html-to-text/-/html-to-text-9.0.5.tgz#6149a0f618ae7a0db8085dca9bbf96d32bb8368d"
++  integrity sha512-qY60FjREgVZL03vJU6IfMV4GDjGBIoOyvuFdpBDIX9yTlDw0TjxVBQp+P8NvpdIXNJvfWBTNul7fsAQJq2FNpg==
++  dependencies:
++    "@selderee/plugin-htmlparser2" "^0.11.0"
++    deepmerge "^4.3.1"
++    dom-serializer "^2.0.0"
++    htmlparser2 "^8.0.2"
++    selderee "^0.11.0"
++
+ html-webpack-plugin@^5.5.0:
+   version "5.6.3"
+   resolved "https://registry.yarnpkg.com/html-webpack-plugin/-/html-webpack-plugin-5.6.3.tgz#a31145f0fee4184d53a794f9513147df1e653685"
+@@ -8819,6 +9179,16 @@ htmlparser2@^6.1.0:
+     domutils "^2.5.2"
+     entities "^2.0.0"
+ 
++htmlparser2@^8.0.2:
++  version "8.0.2"
++  resolved "https://registry.yarnpkg.com/htmlparser2/-/htmlparser2-8.0.2.tgz#f002151705b383e62433b5cf466f5b716edaec21"
++  integrity sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==
++  dependencies:
++    domelementtype "^2.3.0"
++    domhandler "^5.0.3"
++    domutils "^3.0.1"
++    entities "^4.4.0"
++
+ http-deceiver@^1.2.7:
+   version "1.2.7"
+   resolved "https://registry.yarnpkg.com/http-deceiver/-/http-deceiver-1.2.7.tgz#fa7168944ab9a519d337cb0bec7284dc3e723d87"
+@@ -10231,6 +10601,11 @@ launch-editor@^2.6.0:
+     picocolors "^1.0.0"
+     shell-quote "^1.8.1"
+ 
++leac@^0.6.0:
++  version "0.6.0"
++  resolved "https://registry.yarnpkg.com/leac/-/leac-0.6.0.tgz#dcf136e382e666bd2475f44a1096061b70dc0912"
++  integrity sha512-y+SqErxb8h7nE/fiEX07jsbuhrpO9lL8eca7/Y1nuWV2moNlXhyd59iDGcRf6moVyDMbmTNzL40SUyrFU/yDpg==
++
+ leven@^3.1.0:
+   version "3.1.0"
+   resolved "https://registry.yarnpkg.com/leven/-/leven-3.1.0.tgz#77891de834064cccba82ae7842bb6b14a13ed7f2"
+@@ -10460,11 +10835,23 @@ makeerror@1.0.12:
+   dependencies:
+     tmpl "1.0.5"
+ 
++marked@7.0.4:
++  version "7.0.4"
++  resolved "https://registry.yarnpkg.com/marked/-/marked-7.0.4.tgz#e2558ee2d535b9df6a27c6e282dc603a18388a6d"
++  integrity sha512-t8eP0dXRJMtMvBojtkcsA7n48BkauktUKzfkPSCq85ZMTJ0v76Rke4DYz01omYpPTUh4p/f7HePgRo3ebG8+QQ==
++
+ math-intrinsics@^1.1.0:
+   version "1.1.0"
+   resolved "https://registry.yarnpkg.com/math-intrinsics/-/math-intrinsics-1.1.0.tgz#a0dd74be81e2aa5c2f27e65ce283605ee4e2b7f9"
+   integrity sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==
+ 
++md-to-react-email@^5.0.5:
++  version "5.0.5"
++  resolved "https://registry.yarnpkg.com/md-to-react-email/-/md-to-react-email-5.0.5.tgz#1306b2454afe530526e3df42e7f8903fdf6ab07f"
++  integrity sha512-OvAXqwq57uOk+WZqFFNCMZz8yDp8BD3WazW1wAKHUrPbbdr89K9DWS6JXY09vd9xNdPNeurI8DU/X4flcfaD8A==
++  dependencies:
++    marked "7.0.4"
++
+ mdn-data@2.0.14:
+   version "2.0.14"
+   resolved "https://registry.yarnpkg.com/mdn-data/-/mdn-data-2.0.14.tgz#7113fc4281917d63ce29b43446f701e68c25ba50"
+@@ -11073,6 +11460,14 @@ parse5@6.0.1:
+   resolved "https://registry.yarnpkg.com/parse5/-/parse5-6.0.1.tgz#e1a1c085c569b3dc08321184f19a39cc27f7c30b"
+   integrity sha512-Ofn/CTFzRGTTxwpNEs9PP93gXShHcTq255nzRYSKe8AkVpZY7e1fpmTfOyoIvjP5HG7Z2ZM7VS9PPhQGW2pOpw==
+ 
++parseley@^0.12.0:
++  version "0.12.1"
++  resolved "https://registry.yarnpkg.com/parseley/-/parseley-0.12.1.tgz#4afd561d50215ebe259e3e7a853e62f600683aef"
++  integrity sha512-e6qHKe3a9HWr0oMRVDTRhKce+bRO8VGQR3NyVwcjwrbhMmFCX9KszEV35+rn4AdilFAq9VPxP/Fe1wC9Qjd2lw==
++  dependencies:
++    leac "^0.6.0"
++    peberminta "^0.9.0"
++
+ parseurl@~1.3.2, parseurl@~1.3.3:
+   version "1.3.3"
+   resolved "https://registry.yarnpkg.com/parseurl/-/parseurl-1.3.3.tgz#9da19e7bee8d12dff0513ed5b76957793bc2e8d4"
+@@ -11147,6 +11542,11 @@ payment@^2.4.6:
+     globalthis "^1.0.4"
+     qj "~2.0.0"
+ 
++peberminta@^0.9.0:
++  version "0.9.0"
++  resolved "https://registry.yarnpkg.com/peberminta/-/peberminta-0.9.0.tgz#8ec9bc0eb84b7d368126e71ce9033501dca2a352"
++  integrity sha512-XIxfHpEuSJbITd1H3EeQwpcZbTLHc+VVr8ANI9t5sit565tsI4/xK3KWTUFE2e6QiangUkh3B0jihzmGnNrRsQ==
++
+ performance-now@^2.1.0:
+   version "2.1.0"
+   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
+@@ -11771,6 +12171,11 @@ prelude-ls@~1.1.2:
+   resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54"
+   integrity sha512-ESF23V4SKG6lVSGZgYNpbsiaAkdab6ZgOxe52p7+Kid3W3u3bxR4Vfd/o21dmN7jSt0IwgZ4v5MUd26FEtXE9w==
+ 
++prettier@3.5.3, prettier@^3.5.3:
++  version "3.5.3"
++  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.5.3.tgz#4fc2ce0d657e7a02e602549f053b239cb7dfe1b5"
++  integrity sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==
++
+ prettier@^3.4.2:
+   version "3.4.2"
+   resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.4.2.tgz#a5ce1fb522a588bf2b78ca44c6e6fe5aa5a2b13f"
+@@ -11839,6 +12244,11 @@ prisma@^6.2.1:
+   optionalDependencies:
+     fsevents "2.3.3"
+ 
++prismjs@^1.30.0:
++  version "1.30.0"
++  resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.30.0.tgz#d9709969d9d4e16403f6f348c63553b19f0975a9"
++  integrity sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==
++
+ process-nextick-args@~2.0.0:
+   version "2.0.1"
+   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
+@@ -12395,6 +12805,13 @@ react-is@^18.0.0, react-is@^18.2.0:
+   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.3.1.tgz#e83557dc12eae63a99e003a46388b1dcbb44db7e"
+   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
+ 
++react-promise-suspense@0.3.4, react-promise-suspense@^0.3.4:
++  version "0.3.4"
++  resolved "https://registry.yarnpkg.com/react-promise-suspense/-/react-promise-suspense-0.3.4.tgz#05d19a75703d71374674840056cfef2fcd38809d"
++  integrity sha512-I42jl7L3Ze6kZaq+7zXWSunBa3b1on5yfvUW6Eo/3fFOj6dZ5Bqmcd264nJbTK/gn1HjjILAjSwnZbV4RpSaNQ==
++  dependencies:
++    fast-deep-equal "^2.0.1"
++
+ react-redux@^7.2.0:
+   version "7.2.9"
+   resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-7.2.9.tgz#09488fbb9416a4efe3735b7235055442b042481d"
+@@ -12720,6 +13137,13 @@ reselect@^5.1.0:
+   resolved "https://registry.yarnpkg.com/reselect/-/reselect-5.1.1.tgz#c766b1eb5d558291e5e550298adb0becc24bb72e"
+   integrity sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==
+ 
++resend@^4.5.1:
++  version "4.5.1"
++  resolved "https://registry.yarnpkg.com/resend/-/resend-4.5.1.tgz#fb85375263f7c4b07b1a16b377fa7c14d0512780"
++  integrity sha512-ryhHpZqCBmuVyzM19IO8Egtc2hkWI4JOL5lf5F3P7Dydu3rFeX6lHNpGqG0tjWoZ63rw0l731JEmuJZBdDm3og==
++  dependencies:
++    "@react-email/render" "1.0.6"
++
+ resize-observer-polyfill@^1.5.1:
+   version "1.5.1"
+   resolved "https://registry.yarnpkg.com/resize-observer-polyfill/-/resize-observer-polyfill-1.5.1.tgz#0e9020dd3d21024458d4ebd27e23e40269810464"
+@@ -12742,6 +13166,11 @@ resolve-from@^5.0.0:
+   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-5.0.0.tgz#c35225843df8f776df21c57557bc087e9dfdfc69"
+   integrity sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
+ 
++resolve-pkg-maps@^1.0.0:
++  version "1.0.0"
++  resolved "https://registry.yarnpkg.com/resolve-pkg-maps/-/resolve-pkg-maps-1.0.0.tgz#616b3dc2c57056b5588c31cdf4b3d64db133720f"
++  integrity sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==
++
+ resolve-url-loader@^4.0.0:
+   version "4.0.0"
+   resolved "https://registry.yarnpkg.com/resolve-url-loader/-/resolve-url-loader-4.0.0.tgz#d50d4ddc746bb10468443167acf800dcd6c3ad57"
+@@ -12956,6 +13385,13 @@ scroll-into-view-if-needed@^3.1.0:
+   dependencies:
+     compute-scroll-into-view "^3.0.2"
+ 
++selderee@^0.11.0:
++  version "0.11.0"
++  resolved "https://registry.yarnpkg.com/selderee/-/selderee-0.11.0.tgz#6af0c7983e073ad3e35787ffe20cefd9daf0ec8a"
++  integrity sha512-5TF+l7p4+OsnP8BCCvSyZiSPc4x4//p5uPwK8TCnVPJYRmU2aYKMpOXvw8zM5a5JvuuCGN1jmsMwuU2W02ukfA==
++  dependencies:
++    parseley "^0.12.0"
++
+ select-hose@^2.0.0:
+   version "2.0.0"
+   resolved "https://registry.yarnpkg.com/select-hose/-/select-hose-2.0.0.tgz#625d8658f865af43ec962bfc376a37359a4994ca"
+@@ -13984,6 +14420,16 @@ tsutils@^3.21.0:
+   dependencies:
+     tslib "^1.8.1"
+ 
++tsx@^4.19.4:
++  version "4.19.4"
++  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.19.4.tgz#647b4141f4fdd9d773a9b564876773d2846901f4"
++  integrity sha512-gK5GVzDkJK1SI1zwHf32Mqxf2tSJkNx+eYcNly5+nHvWqXUJYUkWBQtKauoESz3ymezAI++ZwT855x5p5eop+Q==
++  dependencies:
++    esbuild "~0.25.0"
++    get-tsconfig "^4.7.5"
++  optionalDependencies:
++    fsevents "~2.3.3"
++
+ turbo-stream@2.4.0:
+   version "2.4.0"
+   resolved "https://registry.yarnpkg.com/turbo-stream/-/turbo-stream-2.4.0.tgz#1e4fca6725e90fa14ac4adb782f2d3759a5695f0"

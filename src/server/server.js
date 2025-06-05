@@ -196,6 +196,15 @@ app.post('/add-board', authenticate, async (req, res) => {
 });
 
 // ============= TASK =============
+app.get('/fetch-task', authenticate, async (req, res) => {
+  const taskId = parseInt(req.query.taskId);
+  if (!taskId) {
+    return res.status(500).json({ error: 'Missing taskId' });
+  }
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  return res.status(200).json({ task: task, message: 'Successfully fetched the task' });
+});
+
 app.post('/add-task', authenticate, async (req, res) => {
   try {
     const { userId, boardId, columnId, taskDetails } = req.body;
@@ -220,12 +229,14 @@ app.post('/add-task', authenticate, async (req, res) => {
         status: taskDetails.status || 'On_Track',
         taskCategory: columnId,
         assignee: taskDetails.assignee || 'Rufus',
+        aiGeneratedResponse: taskDetails.aiGeneratedResponse || '',
         taskCategory: columnId,
         board: {
           connect: { id: boardId },
         },
       },
     });
+    console.log('should be successfully updated');
     res.status(200).json({ message: 'Task added successfully', task: newTask });
   } catch (err) {
     res.status(500).json({ error: 'An error occurred while adding the task' });
@@ -258,7 +269,7 @@ app.post('/update-task-category', authenticate, async (req, res) => {
   }
 });
 
-app.post('/update-task', authenticate, async (req, res) => {
+app.post('/update-task', async (req, res) => {
   try {
     const { boardId, taskId, taskDetails } = req.body;
     if (!boardId || !taskId || !taskDetails) {
@@ -388,7 +399,11 @@ app.post('/add-comment', authenticate, async (req, res) => {
       userId,
     },
   });
-  res.status(200).json({ message: 'Comment added successfully ', addedComment });
+  const newComment = await prisma.comment.findUnique({
+    where: { id: addedComment.id },
+    include: { user: true },
+  });
+  res.status(200).json({ message: 'Comment added successfully ', addedComment: newComment });
 });
 
 // ============= NODES AND EDGES (PROJECT-CANVAS) =============
@@ -412,7 +427,11 @@ app.get('/get-project-canvases', authenticate, async (req, res) => {
       include: {
         projectCanvases: {
           include: {
-            nodes: true,
+            nodes: {
+              include: {
+                tasks: true,
+              },
+            },
             edges: true,
           },
         },

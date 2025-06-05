@@ -35,9 +35,12 @@ model Task {
   status        Status
   taskCategory  TaskCategory
   assignee    String
+  aiGeneratedResponse String?
   boardId       Int   
   board         Board     @relation(fields: [boardId], references: [id])
   comments      Comment[]
+  nodeId Int?
+  node   Node? @relation(fields: [nodeId], references: [id])
 }
 
 model Comment {
@@ -70,6 +73,7 @@ model Node {
   type        String
   projectCanvasId Int
   projectCanvas   ProjectCanvas @relation(fields: [projectCanvasId], references: [id])
+  tasks Task[]
 }
 
 model Edge {
